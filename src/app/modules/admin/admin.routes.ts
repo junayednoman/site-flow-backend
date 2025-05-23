@@ -4,18 +4,19 @@ import authVerify from "../../middlewares/authVerify";
 import { handleZodValidation } from "../../middlewares/handleZodValidation";
 import updateAdminValidationSchema from "./admin.validation";
 import { upload } from "../../utils/multerS3Uploader";
+import { userRoles } from "../../constants/global.constant";
 const adminRouters = Router();
 
-adminRouters.get("/", authVerify(["admin"]), adminControllers.getAdminProfile);
+adminRouters.get("/", authVerify([userRoles.admin]), adminControllers.getAdminProfile);
 adminRouters.put(
   "/",
-  authVerify(["admin"]),
+  authVerify([userRoles.admin]),
   handleZodValidation(updateAdminValidationSchema),
   adminControllers.updateAdmin
 );
 adminRouters.put(
   "/image",
-  authVerify(["admin"]),
+  authVerify([userRoles.admin]),
   upload.single("image"),
   adminControllers.updateAdminImage
 );

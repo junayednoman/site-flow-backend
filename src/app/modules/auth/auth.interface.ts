@@ -4,8 +4,8 @@ export type TAuth = {
   email: string;
   password: string;
   user: ObjectId
-  role: "supervisor" | "manager" | "company_admin" | "admin";
-  user_type: "Supervisor" | "Manager" | "CompanyAdmin" | "Admin";
+  role: "supervisor" | "project_manager" | "company_admin" | "admin";
+  user_type: "Supervisor" | "ProjectManager" | "CompanyAdmin" | "Admin";
   is_account_verified: boolean;
   otp?: string;
   otp_expires?: Date;

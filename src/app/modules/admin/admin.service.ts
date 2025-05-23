@@ -8,7 +8,6 @@ const getAdminProfile = async (email: string) => {
 };
 
 const updateAdmin = async (email: string, payload: Partial<TAdmin>) => {
-  console.log('payload', payload);
   const result = await Admin.findOneAndUpdate({ email }, payload, { new: true });
   return result;
 };
@@ -17,7 +16,7 @@ const updateAdminImage = async (email: string, image: Partial<TAdmin>) => {
   const admin = await Admin.findOne({ email });
   const result = await Admin.findOneAndUpdate({ email }, { image }, { new: true });
   if (result) {
-    if (admin?.image && !admin?.image.includes("postimg")) deleteSingleFileFromS3(admin?.image.split(".com/")[1]);
+    if (admin?.image) deleteSingleFileFromS3(admin?.image.split(".com/")[1]);
   }
   return result;
 };

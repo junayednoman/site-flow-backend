@@ -32,10 +32,10 @@ const deleteChat = handleAsyncRequest(async (req, res) => {
   });
 });
 
-const chatControllers = {
+const chatController = {
   createChat,
   getChats,
   deleteChat
 }
 
-export default chatControllers;
+export default chatController;

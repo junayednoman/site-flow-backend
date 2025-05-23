@@ -1,11 +1,10 @@
 import mongoose, { Schema } from "mongoose";
 import { TAdmin } from "./admin.interface";
-import { defaultProfileImg } from "../../constants/global.constant";
 
 const adminSchema = new Schema<TAdmin>(
   {
     name: { type: String, required: true, trim: true },
-    image: { type: String, default: defaultProfileImg },
+    image: { type: String, default: null },
     email: {
       type: String,
       required: true,

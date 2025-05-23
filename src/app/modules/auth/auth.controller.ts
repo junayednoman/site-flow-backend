@@ -1,7 +1,18 @@
 import config from "../../config";
 import handleAsyncRequest from "../../utils/handleAsyncRequest";
 import { successResponse } from "../../utils/successResponse";
+import { companyAdminServices } from "../companyAdmin/companyAdmin.service";
 import AuthServices from "./auth.service";
+
+const companyAdminSignUp = handleAsyncRequest(async (req, res) => {
+  const payload = req.body;
+  const result = await companyAdminServices.signUp(payload);
+
+  successResponse(res, {
+    message: "User account created successfully!",
+    data: result
+  });
+});
 
 const loginUser = handleAsyncRequest(async (req, res) => {
   const payload = req.body;
@@ -94,14 +105,25 @@ const getNewAccessToken = handleAsyncRequest(async (req, res) => {
   });
 });
 
+const blockUser = handleAsyncRequest(async (req, res) => {
+  const id = req.params.id;
+  const result = await AuthServices.blockUser(id);
+  successResponse(res, {
+    message: "User blocked successfully!",
+    data: result,
+  });
+});
+
 const AuthController = {
+  companyAdminSignUp,
   loginUser,
   sendOtp,
   verifyOtp,
   resetForgottenPassword,
   changePassword,
   getNewAccessToken,
-  logOut
+  logOut,
+  blockUser
 };
 
 export default AuthController;

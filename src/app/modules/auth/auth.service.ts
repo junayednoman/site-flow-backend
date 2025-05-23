@@ -7,6 +7,7 @@ import config from "../../config";
 import generateOTP from "../../utils/generateOTP";
 import { sendEmail } from "../../utils/sendEmail";
 import isUserExist from "../../utils/isUserExist";
+import fs from "fs";
 
 const loginUser = async (payload: { email: string; password: string, is_remember: boolean }) => {
   const user = await isUserExist(payload.email);
@@ -51,14 +52,16 @@ const sendOtp = async (payload: { email: string }) => {
   );
   const otp_expires = new Date(Date.now() + 3 * 60 * 1000);
   const subject = `Your OTP Code is Here - Site FLow`;
-  const htmlMarkup = `<p>Hi,</p>
-  <p>Please use the following One-Time Password (OTP) to verify your email address:</p>
-  <h2 style="color: #2e6c80;">${otp}</h2>
-  <p>This OTP is valid for 3 minutes. If you did not request this, please ignore this email or contact our support team.</p>
-  <p>Thank you,</p>
-  <p>Site FLow</p>`;
+  const year = new Date().getFullYear().toString();
+  const emailTemplatePath = "./src/app/emailTemplates/otp.html";
+  fs.readFile(emailTemplatePath, "utf8", (err, data) => {
+    if (err) throw new AppError(500, err.message || "Something went wrong");
+    const emailContent = data
+      .replace('{{otp}}', otp.toString())
+      .replace('{{year}}', year);
 
-  sendEmail(payload.email, config.sender_email, subject, htmlMarkup);
+    sendEmail(payload.email, subject, emailContent);
+  })
 
   await Auth.findByIdAndUpdate(
     user._id,
@@ -99,14 +102,16 @@ const verifyOtp = async (payload: {
 
   if (payload.verify_account) {
     const subject = `Your Email Has Been Successfully Verified - Site FLow`;
-    const htmlMarkup = `<p>Hi,</p>
-    <p>Congratulations! Your email address has been successfully verified.</p>
-    <p>You can now enjoy all the features of your account without any restrictions.</p>
-    <p>If you have any questions or concerns, please don't hesitate to contact our support team.</p>
-    <p>Thank you,</p>
-    <p>Site FLow</p>`;
+    const year = new Date().getFullYear().toString();
+    const emailTemplatePath = "./src/app/emailTemplates/verificationSuccess.html";
+    fs.readFile(emailTemplatePath, "utf8", (err, data) => {
+      if (err) throw new AppError(500, err.message || "Something went wrong");
+      const emailContent = data
+        .replace('{{year}}', year);
 
-    sendEmail(payload.email, config.sender_email, subject, htmlMarkup);
+      sendEmail(payload.email, subject, emailContent);
+    })
+
     return await Auth.findByIdAndUpdate(user._id, {
       is_account_verified: true,
       $unset: { otp: "", otp_expires: "", otp_attempts: "" },
@@ -139,13 +144,15 @@ const resetForgottenPassword = async (payload: {
   });
 
   if (newAuth) {
-    const subject = `Password Reset Confirmation - Site FLow`;
-    const htmlMarkup = `<p>Hi,</p>
-  <p>Your password has been successfully reset. You can now log in to your account using your new password.</p>
-  <p>If you did not request this password reset, please contact our support team immediately.</p>
-  <p>Thank you,</p>
-  <p>Site FLow</p>`;
-    sendEmail(payload.email, config.sender_email, subject, htmlMarkup);
+    const subject = `Your Password Has Been Successfully Reset - Site FLow`;
+    const year = new Date().getFullYear().toString();
+    const emailTemplatePath = "./src/app/emailTemplates/passwordResetSuccess.html";
+    fs.readFile(emailTemplatePath, "utf8", (err, data) => {
+      if (err) throw new AppError(500, err.message || "Something went wrong");
+      const emailContent = data
+        .replace('{{year}}', year);
+      sendEmail(payload.email, subject, emailContent);
+    })
   }
 };
 
@@ -211,13 +218,21 @@ const getNewAccessToken = async (token: string) => {
   return { accessToken }
 }
 
+const blockUser = async (id: string) => {
+  const user = await Auth.findOne({ _id: id, is_blocked: false });
+  if (!user) throw new AppError(400, "Invalid user id!");
+
+  return await Auth.findByIdAndUpdate(user._id, { is_blocked: true }, { new: true });
+};
+
 const AuthServices = {
   loginUser,
   sendOtp,
   verifyOtp,
   resetForgottenPassword,
   changePassword,
-  getNewAccessToken
+  getNewAccessToken,
+  blockUser
 };
 
 export default AuthServices;

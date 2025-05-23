@@ -9,17 +9,23 @@ import {
 } from "./auth.validation";
 import AuthController from "./auth.controller";
 import authVerify from "../../middlewares/authVerify";
+import { userRoles } from "../../constants/global.constant";
 
 const authRouters = Router();
 authRouters.post(
-  "/log-out",
-  authVerify(["user", "admin"]),
-  AuthController.logOut
+  "/company-admin-signup",
+  handleZodValidation(loginUserValidationSchema),
+  AuthController.companyAdminSignUp
 );
 authRouters.post(
   "/login",
   handleZodValidation(loginUserValidationSchema),
   AuthController.loginUser
+);
+authRouters.post(
+  "/log-out",
+  authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.projectManager, userRoles.supervisor,]),
+  AuthController.logOut
 );
 authRouters.post(
   "/send-otp",
@@ -38,7 +44,7 @@ authRouters.post(
 );
 authRouters.post(
   "/change-password",
-  authVerify(["user", "admin"]),
+  authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.projectManager, userRoles.supervisor,]),
   handleZodValidation(changePasswordValidationSchema),
   AuthController.changePassword
 );
@@ -46,5 +52,11 @@ authRouters.get(
   "/get-access-token",
   AuthController.getNewAccessToken
 );
+authRouters.patch(
+  "/block/:id",
+  authVerify([userRoles.admin]),
+  AuthController.blockUser
+);
+
 
 export default authRouters;

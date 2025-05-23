@@ -13,6 +13,9 @@ const authVerify = (allowedRoles: string[]) =>
       }
       const token = authHeader.split("Bearer ")[1];
 
+      if (!token) throw new AppError(401, "Unauthorized");
+
+
       const decoded = verifyJWT(token);
       const user = await Auth.findOne({
         email: decoded.email,
