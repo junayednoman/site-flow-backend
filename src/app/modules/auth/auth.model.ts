@@ -11,7 +11,7 @@ const userSchema = new Schema<TAuth>(
     },
     user_type: {
       type: String,
-      enum: ["Supervisor", "ProjectManager", "CompanyAdmin", "Admin"],
+      enum: ["Employee", "CompanyAdmin", "Admin"],
       required: true,
     },
     user: {
@@ -22,7 +22,7 @@ const userSchema = new Schema<TAuth>(
     password: { type: String, required: true },
     role: {
       type: String,
-      enum: ["supervisor", "project_manager", "company_admin", "admin"],
+      enum: ["employee", "company_admin", "admin"],
       required: true,
     },
     is_account_verified: { type: Boolean, default: undefined },

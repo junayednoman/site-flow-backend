@@ -7,8 +7,8 @@ import { userRoles } from "../../constants/global.constant";
 
 const chatRouters = Router();
 
-chatRouters.post("/", authVerify([userRoles.companyAdmin, userRoles.projectManager, userRoles.supervisor]), handleZodValidation(chatValidationSchema), chatController.createChat);
-chatRouters.get("/", authVerify([userRoles.companyAdmin, userRoles.projectManager, userRoles.supervisor]), chatController.getChats);
-chatRouters.delete("/:id", authVerify([userRoles.companyAdmin, userRoles.projectManager, userRoles.supervisor]), chatController.deleteChat);
+chatRouters.post("/", authVerify([userRoles.companyAdmin, userRoles.employee]), handleZodValidation(chatValidationSchema), chatController.createChat);
+chatRouters.get("/", authVerify([userRoles.companyAdmin, userRoles.employee]), chatController.getChats);
+chatRouters.delete("/:id", authVerify([userRoles.companyAdmin, userRoles.employee]), chatController.deleteChat);
 
 export default chatRouters;

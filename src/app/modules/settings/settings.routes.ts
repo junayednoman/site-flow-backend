@@ -7,7 +7,7 @@ import { userRoles } from '../../constants/global.constant'
 
 export const settingsRoutes = Router()
 
-settingsRoutes.get('/', authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.projectManager, userRoles.supervisor]), settingsController.getSettingsData)
+settingsRoutes.get('/', authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.employee]), settingsController.getSettingsData)
 settingsRoutes.put(
   '/',
   authVerify([userRoles.admin]),

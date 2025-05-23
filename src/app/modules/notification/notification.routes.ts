@@ -5,15 +5,15 @@ import { userRoles } from "../../constants/global.constant";
 
 const notificationRouters = Router();
 
-notificationRouters.post("/", authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.projectManager, userRoles.supervisor]), notificationController.createNotification)
-notificationRouters.get("/", authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.projectManager, userRoles.supervisor]), notificationController.getAllNotifications)
+notificationRouters.post("/", authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.employee]), notificationController.createNotification)
+notificationRouters.get("/", authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.employee]), notificationController.getAllNotifications)
 
 notificationRouters.patch(
-  "/:id", authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.projectManager, userRoles.supervisor]),
+  "/:id", authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.employee]),
   notificationController.markAsRead)
 
 notificationRouters.patch(
-  "/", authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.projectManager, userRoles.supervisor]),
+  "/", authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.employee]),
   notificationController.markAllAsRead)
 
 export default notificationRouters;
