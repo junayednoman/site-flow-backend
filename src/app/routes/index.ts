@@ -12,6 +12,7 @@ import companyAdminRouters from "../modules/companyAdmin/companyAdmin.routes";
 import projectRoutes from "../modules/project/project.routes";
 import employeeRouters from "../modules/employee/employee.routes";
 import workforceRoutes from "../modules/workforce/workforce.routes";
+import equipmentRoutes from "../modules/equipment/equipment.routes";
 
 const router = Router();
 
@@ -29,6 +30,7 @@ const apiRoutes = [
   { path: "/projects", route: projectRoutes },
   { path: "/employees", route: employeeRouters },
   { path: "/workforces", route: workforceRoutes },
+  { path: "/equipments", route: equipmentRoutes },
 ];
 
 apiRoutes.forEach((route) => {
