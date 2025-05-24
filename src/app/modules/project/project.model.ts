@@ -8,8 +8,8 @@ const ProjectSchema = new mongoose.Schema<TProjectType>({
   location: { type: String, required: true },
   timeline: { type: Date, required: true },
   note: { type: String, required: false },
-  supervisor: { type: [mongoose.Schema.Types.ObjectId], ref: 'Auth', required: true },
-  manager: { type: [mongoose.Schema.Types.ObjectId], ref: 'Auth', required: true },
+  supervisor: { type: mongoose.Schema.Types.ObjectId, ref: 'Auth', required: true },
+  manager: { type: mongoose.Schema.Types.ObjectId, ref: 'Auth', required: true },
 }, {
   timestamps: true
 });

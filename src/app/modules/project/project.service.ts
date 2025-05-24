@@ -1,17 +1,24 @@
+import { ObjectId } from "mongoose";
 import { AppError } from "../../classes/appError";
 import QueryBuilder from "../../classes/queryBuilder";
 import { userRoles } from "../../constants/global.constant";
 import { sendEmail } from "../../utils/sendEmail";
+import Auth from "../auth/auth.model";
 import { Employee } from "../employee/employee.model";
 import { TProjectType } from "./project.interface";
 import Project from "./project.model";
 import fs from "fs";
 
 const createProject = async (id: string, payload: TProjectType) => {
-  const supervisor = await Employee.findById(id);
+  const supervisor = await Employee.findById(payload.supervisor);
   if (!supervisor) throw new AppError(400, "Invalid supervisor id!");
   const manager = await Employee.findById(payload.manager);
   if (!manager) throw new AppError(400, "Invalid manager id!");
+
+  const supervisorAuth = await Auth.findOne({ email: supervisor.email, role: userRoles.employee, is_deleted: false, is_blocked: false });
+  const managerAuth = await Auth.findOne({ email: manager.email, role: userRoles.employee, is_deleted: false, is_blocked: false });
+  payload.supervisor = supervisorAuth?._id as unknown as ObjectId;
+  payload.manager = managerAuth?._id as unknown as ObjectId;
 
   payload.company_admin = id;
   const result = await Project.create(payload);
