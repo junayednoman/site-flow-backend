@@ -9,9 +9,12 @@ export const ProjectValidationSchema = z.object({
     if (typeof arg === "string" || arg instanceof Date) return new Date(arg);
   }, z.date()),
   note: z.string().optional(),
-  employee: z.string().refine(val => mongoose.Types.ObjectId.isValid(val), {
-    message: "Invalid employee ObjectId",
-  }).optional(),
+  supervisor: z.string({ required_error: "Supervisor is required" }).refine(val => mongoose.Types.ObjectId.isValid(val), {
+    message: "Invalid supervisor id",
+  }),
+  manager: z.string({ required_error: "Manager is required" }).refine(val => mongoose.Types.ObjectId.isValid(val), {
+    message: "Invalid manager id",
+  })
 });
 
 export const UpdateProjectValidationSchema = z.object({
@@ -22,7 +25,10 @@ export const UpdateProjectValidationSchema = z.object({
     if (typeof arg === "string" || arg instanceof Date) return new Date(arg);
   }, z.date()).optional(),
   note: z.string().optional(),
-  employee: z.string().refine(val => mongoose.Types.ObjectId.isValid(val), {
-    message: "Invalid employee ObjectId",
+  supervisor: z.string().refine(val => mongoose.Types.ObjectId.isValid(val), {
+    message: "Invalid supervisor id",
   }).optional(),
+  manager: z.string().refine(val => mongoose.Types.ObjectId.isValid(val), {
+    message: "Invalid manager id",
+  }).optional()
 });

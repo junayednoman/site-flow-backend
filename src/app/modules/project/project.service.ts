@@ -1,12 +1,51 @@
 import { AppError } from "../../classes/appError";
 import QueryBuilder from "../../classes/queryBuilder";
 import { userRoles } from "../../constants/global.constant";
+import { sendEmail } from "../../utils/sendEmail";
+import { Employee } from "../employee/employee.model";
 import { TProjectType } from "./project.interface";
 import Project from "./project.model";
+import fs from "fs";
 
 const createProject = async (id: string, payload: TProjectType) => {
+  const supervisor = await Employee.findById(id);
+  if (!supervisor) throw new AppError(400, "Invalid supervisor id!");
+  const manager = await Employee.findById(payload.manager);
+  if (!manager) throw new AppError(400, "Invalid manager id!");
+
   payload.company_admin = id;
   const result = await Project.create(payload);
+
+  // send email to supervisor & manager
+  if (result) {
+    const emailTemplatePath = "./src/app/emailTemplates/notifyProjectAssignment.html";
+    const year = new Date().getFullYear().toString();
+    // for supervisor
+    const subject = `You have been assigned as supervisor for ${payload.name} - Site Flow`
+    fs.readFile(emailTemplatePath, "utf8", (err, data) => {
+      if (err) throw new AppError(500, err.message || "Something went wrong");
+      const emailContent = data
+        .replace('{{name}}', supervisor.name)
+        .replace('{{employee_type}}', "supervisor")
+        .replace('{{project_name}}', payload.name)
+        .replace('{{year}}', year);
+
+      sendEmail(supervisor.email, subject, emailContent);
+    })
+
+    // for manager
+    const managerSubject = `You have been assigned as manager for ${payload.name} - Site Flow`
+    fs.readFile(emailTemplatePath, "utf8", (err, data) => {
+      if (err) throw new AppError(500, err.message || "Something went wrong");
+      const emailContent = data
+        .replace('{{name}}', manager.name)
+        .replace('{{employee_type}}', "manager")
+        .replace('{{project_name}}', payload.name)
+        .replace('{{year}}', year);
+
+      sendEmail(manager.email, managerSubject, emailContent);
+    })
+  }
   return result;
 }
 

@@ -7,5 +7,6 @@ export type TProjectType = {
   location: string;
   timeline: Date;
   note?: string;
-  employees: ObjectId[];
+  supervisor: ObjectId;
+  manager: ObjectId;
 };
