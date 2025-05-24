@@ -13,3 +13,16 @@ export const ProjectValidationSchema = z.object({
     message: "Invalid employee ObjectId",
   }).optional(),
 });
+
+export const UpdateProjectValidationSchema = z.object({
+  client_name: z.string().optional(),
+  name: z.string().optional(),
+  location: z.string().optional(),
+  timeline: z.preprocess(arg => {
+    if (typeof arg === "string" || arg instanceof Date) return new Date(arg);
+  }, z.date()).optional(),
+  note: z.string().optional(),
+  employee: z.string().refine(val => mongoose.Types.ObjectId.isValid(val), {
+    message: "Invalid employee ObjectId",
+  }).optional(),
+});

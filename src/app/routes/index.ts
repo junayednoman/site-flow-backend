@@ -9,6 +9,8 @@ import chatRouters from "../modules/chat/chat.routes";
 import messageRouters from "../modules/message/message.routes";
 import notificationRouters from "../modules/notification/notification.routes";
 import companyAdminRouters from "../modules/companyAdmin/companyAdmin.routes";
+import projectRoutes from "../modules/project/project.routes";
+import employeeRouters from "../modules/employee/employee.routes";
 
 const router = Router();
 
@@ -23,6 +25,8 @@ const apiRoutes = [
   { path: "/messages", route: messageRouters },
   { path: "/notifications", route: notificationRouters },
   { path: "/company-admins", route: companyAdminRouters },
+  { path: "/projects", route: projectRoutes },
+  { path: "/employees", route: employeeRouters },
 ];
 
 apiRoutes.forEach((route) => {

@@ -11,20 +11,20 @@ const getAdminProfile = handleAsyncRequest(async (req: any, res) => {
   });
 });
 
-const updateAdmin = handleAsyncRequest(async (req: any, res) => {
+const updateAdminProfile = handleAsyncRequest(async (req: any, res) => {
   const payload = req.body;
   const email = req.user.email;
-  const result = await adminServices.updateAdmin(email, payload);
+  const result = await adminServices.updateAdminProfile(email, payload);
   successResponse(res, {
     message: "Profile updated successfully!",
     data: result,
   });
 });
 
-const updateAdminImage = handleAsyncRequest(async (req: any, res) => {
+const updateAdminProfileImage = handleAsyncRequest(async (req: any, res) => {
   const image = req.file?.location;
   const email = req.user.email;
-  const result = await adminServices.updateAdminImage(email, image);
+  const result = await adminServices.updateAdminProfileImage(email, image);
   successResponse(res, {
     message: "Profile image updated successfully!",
     data: result,
@@ -32,9 +32,9 @@ const updateAdminImage = handleAsyncRequest(async (req: any, res) => {
 });
 
 const adminControllers = {
-  updateAdmin,
+  updateAdminProfile,
   getAdminProfile,
-  updateAdminImage
+  updateAdminProfileImage
 };
 
 export default adminControllers;

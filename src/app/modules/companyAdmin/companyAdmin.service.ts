@@ -10,6 +10,7 @@ import generateOTP from "../../utils/generateOTP";
 import { sendEmail } from "../../utils/sendEmail";
 import CompanyAdmin from "./companyAdmin.model";
 import QueryBuilder from "../../classes/queryBuilder";
+import { userRoles } from "../../constants/global.constant";
 
 const signUp = async (payload: TCompanyAdmin & { password: string }) => {
   const auth = await Auth.findOne({ email: payload.email, is_account_verified: true });
@@ -46,9 +47,9 @@ const signUp = async (payload: TCompanyAdmin & { password: string }) => {
 
     const newUser = await CompanyAdmin.findOneAndUpdate({ email: payload.email }, userData, { session, upsert: true, new: true });
 
-    authData.user = newUser?._id
-    authData.user_type = "CompanyAdmin"
-    authData.role = "company_admin"
+    authData.user = newUser?._id;
+    authData.user_type = "CompanyAdmin";
+    authData.role = userRoles.companyAdmin;
     await Auth.findOneAndUpdate({ email: payload.email }, authData, { session, upsert: true, new: true });
 
     if (newUser) {

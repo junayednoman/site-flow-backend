@@ -2,7 +2,7 @@ import { Router } from "express";
 import adminControllers from "./admin.controller";
 import authVerify from "../../middlewares/authVerify";
 import { handleZodValidation } from "../../middlewares/handleZodValidation";
-import updateAdminValidationSchema from "./admin.validation";
+import updateAdminProfileValidationSchema from "./admin.validation";
 import { upload } from "../../utils/multerS3Uploader";
 import { userRoles } from "../../constants/global.constant";
 const adminRouters = Router();
@@ -11,13 +11,13 @@ adminRouters.get("/", authVerify([userRoles.admin]), adminControllers.getAdminPr
 adminRouters.put(
   "/",
   authVerify([userRoles.admin]),
-  handleZodValidation(updateAdminValidationSchema),
-  adminControllers.updateAdmin
+  handleZodValidation(updateAdminProfileValidationSchema),
+  adminControllers.updateAdminProfile
 );
 adminRouters.put(
   "/image",
   authVerify([userRoles.admin]),
   upload.single("image"),
-  adminControllers.updateAdminImage
+  adminControllers.updateAdminProfileImage
 );
 export default adminRouters;

@@ -7,12 +7,12 @@ const getAdminProfile = async (email: string) => {
   return admin;
 };
 
-const updateAdmin = async (email: string, payload: Partial<TAdmin>) => {
+const updateAdminProfile = async (email: string, payload: Partial<TAdmin>) => {
   const result = await Admin.findOneAndUpdate({ email }, payload, { new: true });
   return result;
 };
 
-const updateAdminImage = async (email: string, image: Partial<TAdmin>) => {
+const updateAdminProfileImage = async (email: string, image: Partial<TAdmin>) => {
   const admin = await Admin.findOne({ email });
   const result = await Admin.findOneAndUpdate({ email }, { image }, { new: true });
   if (result) {
@@ -21,4 +21,4 @@ const updateAdminImage = async (email: string, image: Partial<TAdmin>) => {
   return result;
 };
 
-export const adminServices = { updateAdmin, getAdminProfile, updateAdminImage };
+export const adminServices = { updateAdminProfile, getAdminProfile, updateAdminProfileImage };
