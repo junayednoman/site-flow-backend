@@ -15,7 +15,7 @@ const getEquipmentById = async (id: string) => {
   return equipment;
 };
 
-const getAllEquipments = async (projectId: string) => {
+const getProjectEquipments = async (projectId: string) => {
   const equipment = await Equipment.find({ project: projectId });
   return equipment;
 };
@@ -52,14 +52,14 @@ const deleteEquipment = async (id: string, userId: string) => {
     throw new AppError(401, 'Unauthorized');
   }
 
-  const deleted = await Equipment.findByIdAndDelete(id);
+  const deleted = await Equipment.findByIdAndUpdate(id, { is_deleted: true }, { new: true });
   return deleted;
 };
 
 export default {
   createEquipment,
   getEquipmentById,
-  getAllEquipments,
+  getProjectEquipments,
   updateEquipment,
   deleteEquipment,
 };

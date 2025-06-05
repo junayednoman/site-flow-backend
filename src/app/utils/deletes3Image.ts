@@ -32,7 +32,6 @@ export const deleteSingleFileFromS3 = async (
     await s3.send(command);
   } catch (error: any) {
     console.error(`Error deleting file: ${error.message}`);
-    throw new Error("Failed to delete file from S3");
   }
 };
 
@@ -66,6 +65,5 @@ export const deleteMultipleFilesFromS3 = async (
     }
   } catch (error: any) {
     console.error(`Error deleting files: ${error.message}`);
-    throw new Error("Failed to delete files from S3");
   }
 };

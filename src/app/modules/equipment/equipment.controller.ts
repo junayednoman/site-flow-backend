@@ -21,9 +21,9 @@ const getEquipmentById = handleAsyncRequest(async (req, res) => {
   });
 });
 
-const getAllEquipments = handleAsyncRequest(async (req, res) => {
+const getProjectEquipments = handleAsyncRequest(async (req, res) => {
   const projectId = req.params.projectId;
-  const result = await equipmentService.getAllEquipments(projectId);
+  const result = await equipmentService.getProjectEquipments(projectId);
   successResponse(res, {
     message: "Equipments retrieved successfully!",
     data: result,
@@ -54,7 +54,7 @@ const deleteEquipment = handleAsyncRequest(async (req: any, res) => {
 export default {
   createEquipment,
   getEquipmentById,
-  getAllEquipments,
+  getProjectEquipments,
   updateEquipment,
   deleteEquipment,
 };

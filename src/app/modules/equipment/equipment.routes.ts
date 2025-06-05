@@ -23,7 +23,7 @@ router.get(
 router.get(
   "/all/:projectId",
   authVerify([userRoles.companyAdmin, userRoles.employee, userRoles.employee]),
-  equipmentController.getAllEquipments
+  equipmentController.getProjectEquipments
 );
 
 router.put(

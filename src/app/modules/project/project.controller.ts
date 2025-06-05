@@ -13,11 +13,11 @@ const createProject = handleAsyncRequest(async (req: any, res) => {
   });
 });
 
-const getAllProjects = handleAsyncRequest(async (req: any, res) => {
+const getCompanyProjects = handleAsyncRequest(async (req: any, res) => {
   const query = req.query;
   const userRole = req.user.role;
   const userId = req.user.id;
-  const result = await projectService.getAllProjects(query, userRole, userId);
+  const result = await projectService.getCompanyProjects(query, userRole, userId);
   successResponse(res, {
     message: "Projects retrieved successfully!",
     data: result
@@ -56,5 +56,5 @@ const deleteProject = handleAsyncRequest(async (req: any, res) => {
   });
 });
 
-const projectController = { createProject, getAllProjects, getSingleProject, updateProject, deleteProject };
+const projectController = { createProject, getCompanyProjects, getSingleProject, updateProject, deleteProject };
 export default projectController;

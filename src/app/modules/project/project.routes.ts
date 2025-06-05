@@ -8,7 +8,7 @@ import projectController from "./project.controller";
 const projectRoutes = Router();
 
 projectRoutes.post("/", authVerify([userRoles.companyAdmin]), handleZodValidation(ProjectValidationSchema), projectController.createProject);
-projectRoutes.get("/", authVerify([userRoles.companyAdmin, userRoles.employee]), projectController.getAllProjects);
+projectRoutes.get("/", authVerify([userRoles.companyAdmin, userRoles.employee]), projectController.getCompanyProjects);
 projectRoutes.get("/:id", authVerify([userRoles.companyAdmin, userRoles.employee]), projectController.getSingleProject);
 projectRoutes.put("/:id", authVerify([userRoles.companyAdmin]), handleZodValidation(UpdateProjectValidationSchema), projectController.updateProject);
 projectRoutes.delete("/:id", authVerify([userRoles.companyAdmin]), projectController.deleteProject);

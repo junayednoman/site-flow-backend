@@ -56,7 +56,7 @@ const createProject = async (id: string, payload: TProjectType) => {
   return result;
 }
 
-const getAllProjects = async (query: Record<string, any>, userRole: "employee" | "company_admin", userId: string) => {
+const getCompanyProjects = async (query: Record<string, any>, userRole: "employee" | "company_admin", userId: string) => {
   const searchableFields = [
     "name",
     "client_name"
@@ -113,5 +113,5 @@ const deleteProject = async (id: string, userId: string) => {
   return result;
 }
 
-const projectService = { createProject, getAllProjects, getSingleProject, updateProject, deleteProject };
+const projectService = { createProject, getCompanyProjects, getSingleProject, updateProject, deleteProject };
 export default projectService;

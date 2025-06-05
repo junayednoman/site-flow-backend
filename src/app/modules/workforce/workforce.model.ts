@@ -5,6 +5,7 @@ const workforceSchema = new Schema<TWorkforce>({
   project: { type: Types.ObjectId, ref: 'Project', required: true },
   name: { type: String, required: true },
   quantity: { type: Number, required: true },
+  is_deleted: { type: Boolean, default: false },
 }, {
   timestamps: true
 });

@@ -21,9 +21,9 @@ const getWorkforceById = handleAsyncRequest(async (req, res) => {
   });
 });
 
-const getAllWorkforces = handleAsyncRequest(async (req, res) => {
+const getProjectWorkforces = handleAsyncRequest(async (req, res) => {
   const projectId = req.params.projectId;
-  const result = await workforceService.getAllWorkforces(projectId);
+  const result = await workforceService.getProjectWorkforces(projectId);
   successResponse(res, {
     message: "Workforces retrieved successfully!",
     data: result,
@@ -54,7 +54,7 @@ const deleteWorkforce = handleAsyncRequest(async (req: any, res) => {
 export default {
   createWorkforce,
   getWorkforceById,
-  getAllWorkforces,
+  getProjectWorkforces,
   updateWorkforce,
   deleteWorkforce,
 };

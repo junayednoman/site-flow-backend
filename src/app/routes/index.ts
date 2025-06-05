@@ -13,6 +13,7 @@ import projectRoutes from "../modules/project/project.routes";
 import employeeRouters from "../modules/employee/employee.routes";
 import workforceRoutes from "../modules/workforce/workforce.routes";
 import equipmentRoutes from "../modules/equipment/equipment.routes";
+import dayWorkRouters from "../modules/dayWork/dayWork.routes";
 
 const router = Router();
 
@@ -31,6 +32,7 @@ const apiRoutes = [
   { path: "/employees", route: employeeRouters },
   { path: "/workforces", route: workforceRoutes },
   { path: "/equipments", route: equipmentRoutes },
+  { path: "/day-works", route: dayWorkRouters },
 ];
 
 apiRoutes.forEach((route) => {

@@ -15,8 +15,8 @@ const getWorkforceById = async (id: string) => {
   return workforce;
 };
 
-const getAllWorkforces = async (projectId: string) => {
-  const workforces = await Workforce.find({ project: projectId });
+const getProjectWorkforces = async (projectId: string) => {
+  const workforces = await Workforce.find({ project: projectId, is_deleted: false });
   return workforces;
 };
 
@@ -52,14 +52,14 @@ const deleteWorkforce = async (id: string, userId: string) => {
     throw new AppError(401, 'Unauthorized');
   }
 
-  const deleted = await Workforce.findByIdAndDelete(id);
+  const deleted = await Workforce.findByIdAndUpdate(id, { is_deleted: true }, { new: true });
   return deleted;
 };
 
 export default {
   createWorkforce,
   getWorkforceById,
-  getAllWorkforces,
+  getProjectWorkforces,
   updateWorkforce,
   deleteWorkforce,
 };
