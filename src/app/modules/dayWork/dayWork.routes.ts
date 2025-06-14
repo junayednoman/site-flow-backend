@@ -3,7 +3,7 @@ import { userRoles } from "../../constants/global.constant";
 import authVerify from "../../middlewares/authVerify";
 import dayWorkController from "./dayWork.controller";
 import { handleZodValidation } from "../../middlewares/handleZodValidation";
-import { dayWorkZodSchema } from "./dayWork.validation";
+import { dayWorkZodSchema, updateDayWorkZodSchema } from "./dayWork.validation";
 import { upload } from "../../utils/multerS3Uploader";
 
 const router = Router();
@@ -32,7 +32,20 @@ router.put(
   "/:id",
   authVerify([userRoles.employee]),
   upload.single("image"),
+  handleZodValidation(updateDayWorkZodSchema, true),
   dayWorkController.updateDayWork
+);
+
+router.patch(
+  "/remove-workforce/:id",
+  authVerify([userRoles.employee]),
+  dayWorkController.removeDayWorkWorkforce
+);
+
+router.patch(
+  "/remove-equipment/:id",
+  authVerify([userRoles.employee]),
+  dayWorkController.removeDayWorkEquipment
 );
 
 router.delete(

@@ -23,10 +23,11 @@ const getDayWorkById = handleAsyncRequest(async (req, res) => {
   });
 });
 
-const getProjectDayWorks = handleAsyncRequest(async (req, res) => {
+const getProjectDayWorks = handleAsyncRequest(async (req: any, res) => {
   const query = req.query;
   const projectId = req.params.projectId;
-  const result = await dayWorkService.getProjectDayWorks(query, projectId);
+  const userId = req.user.id;
+  const result = await dayWorkService.getProjectDayWorks(query, projectId, userId);
   successResponse(res, {
     message: "Day-works retrieved successfully!",
     data: result,
@@ -41,6 +42,26 @@ const updateDayWork = handleAsyncRequest(async (req: any, res) => {
   const result = await dayWorkService.updateDayWork(id, userId, payload, file);
   successResponse(res, {
     message: "Day-work updated successfully!",
+    data: result,
+  });
+});
+
+const removeDayWorkWorkforce = handleAsyncRequest(async (req: any, res) => {
+  const dayWorkId = req.params.id;
+  const workforceId = req.body.workforce_id;
+  const result = await dayWorkService.removeDayWorkWorkforce(dayWorkId, workforceId);
+  successResponse(res, {
+    message: "Day-work work force updated successfully!",
+    data: result,
+  });
+});
+
+const removeDayWorkEquipment = handleAsyncRequest(async (req: any, res) => {
+  const dayWorkId = req.params.id;
+  const equipmentId = req.body.equipment_id;
+  const result = await dayWorkService.removeDayWorkEquipment(dayWorkId, equipmentId);
+  successResponse(res, {
+    message: "Day-work equipment updated successfully!",
     data: result,
   });
 });
@@ -60,4 +81,6 @@ export default {
   getProjectDayWorks,
   updateDayWork,
   deleteDayWork,
+  removeDayWorkWorkforce,
+  removeDayWorkEquipment,
 };

@@ -1,4 +1,4 @@
-import { ObjectId } from "mongoose";
+import { ObjectId, startSession } from "mongoose";
 import { AppError } from "../../classes/appError";
 import QueryBuilder from "../../classes/queryBuilder";
 import { userRoles } from "../../constants/global.constant";
@@ -8,6 +8,9 @@ import { Employee } from "../employee/employee.model";
 import { TProjectType } from "./project.interface";
 import Project from "./project.model";
 import fs from "fs";
+import Equipment from "../equipment/equipment.model";
+import Workforce from "../workforce/workforce.model";
+import DayWork from "../dayWork/dayWork.model";
 
 const createProject = async (id: string, payload: TProjectType) => {
   const supervisor = await Employee.findById(payload.supervisor);
@@ -109,8 +112,23 @@ const deleteProject = async (id: string, userId: string) => {
   const project = await Project.findById(id);
   if (!project) throw new AppError(400, "Invalid project id!");
   if (project.company_admin.toString() !== userId) throw new AppError(401, "Unauthorized!");
-  const result = await Project.findByIdAndDelete(id);
-  return result;
+  const session = await startSession();
+  try {
+    session.startTransaction();
+
+    const result = await Project.findByIdAndDelete(id, { session });
+    await Equipment.findOneAndDelete({ project: id }, { session });
+    await Workforce.findOneAndDelete({ project: id }, { session });
+    await DayWork.findOneAndDelete({ project: id }, { session });
+    await session.commitTransaction();
+    return result;
+  } catch (error: any) {
+    await session.abortTransaction();
+    throw new AppError(500, error.message || "Something went wrong!");
+  }
+  finally {
+    session.endSession();
+  }
 }
 
 const projectService = { createProject, getCompanyProjects, getSingleProject, updateProject, deleteProject };
