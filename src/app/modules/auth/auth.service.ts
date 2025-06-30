@@ -103,7 +103,7 @@ const verifyOtp = async (payload: {
   if (payload.verify_account) {
     const subject = `Your Email Has Been Successfully Verified - Site FLow`;
     const year = new Date().getFullYear().toString();
-    const emailTemplatePath = "./src/app/emailTemplates/verificationSuccess.html";
+    const emailTemplatePath = "./src/app/emailTemplates/otpSuccess.html";
     fs.readFile(emailTemplatePath, "utf8", (err, data) => {
       if (err) throw new AppError(500, err.message || "Something went wrong");
       const emailContent = data
