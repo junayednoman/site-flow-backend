@@ -64,13 +64,12 @@ const getCompanyProjects = async (query: Record<string, any>, userRole: "employe
     "name",
     "client_name"
   ];
-
   // Role based query
   let roleQuery = {};
   if (userRole == userRoles.companyAdmin) {
     roleQuery = { company_admin: userId }
   } else if (userRole == userRoles.employee) {
-    roleQuery = { employees: { $in: [userId] } }
+    roleQuery = { $or: [{ supervisor: userId }, { manager: userId }] }
   }
   const projectQuery = new QueryBuilder(
     Project.find(roleQuery),
