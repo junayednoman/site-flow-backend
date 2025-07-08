@@ -1,6 +1,7 @@
 import { ObjectId } from "mongoose";
 
 export type TDayWork = {
+  added_by: ObjectId;
   name: string;
   project: ObjectId;
   description: string;

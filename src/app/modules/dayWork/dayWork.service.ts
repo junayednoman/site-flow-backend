@@ -11,6 +11,7 @@ import checkProjectAuthorization from "../../utils/checkProjectAuthorization";
 import { userRoles } from "../../constants/global.constant";
 
 const createDayWork = async (userId: string, payload: TDayWork, file?: any) => {
+  payload.added_by = userId as unknown as ObjectId;
   if (file) payload.image = file.location;
   const session = await startSession();
   session.startTransaction();
@@ -75,7 +76,14 @@ const createDayWork = async (userId: string, payload: TDayWork, file?: any) => {
 };
 
 const getDayWorkById = async (id: string) => {
-  const dayWork = await DayWork.findById(id).populate("project").populate("tasks.workforces.workforce", "name").populate("tasks.equipments.equipment", "name");
+  // ----------------  --------------------------- //
+  // ----------------  --------------------------- //
+
+  // populate data based on figma(only required fields)
+
+  // ----------------  --------------------------- //
+  // ----------------  --------------------------- //
+  const dayWork = await DayWork.findById(id).populate("project", "name").populate("tasks.workforces.workforce", "name").populate("tasks.equipments.equipment", "name");
   return dayWork;
 };
 

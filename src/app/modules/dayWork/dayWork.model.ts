@@ -21,6 +21,7 @@ const TaskSchema = new Schema({
 
 const DayWorkSchema = new Schema<TDayWork>(
   {
+    added_by: { type: Types.ObjectId, ref: "Auth", required: true },
     name: { type: String, required: true },
     project: { type: Types.ObjectId, ref: "Project", required: true },
     description: { type: String, required: true },
