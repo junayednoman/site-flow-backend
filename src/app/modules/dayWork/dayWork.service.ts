@@ -5,25 +5,25 @@ import Project from "../project/project.model";
 import Workforce from "../workforce/workforce.model";
 import Equipment from "../equipment/equipment.model";
 import QueryBuilder from "../../classes/queryBuilder";
-import { startSession } from "mongoose";
+import { ObjectId, startSession } from "mongoose";
 import { deleteSingleFileFromS3 } from "../../utils/deletes3Image";
+import checkProjectAuthorization from "../../utils/checkProjectAuthorization";
+import { userRoles } from "../../constants/global.constant";
 
 const createDayWork = async (userId: string, payload: TDayWork, file?: any) => {
   if (file) payload.image = file.location;
-  // Start a session for transaction
   const session = await startSession();
   session.startTransaction();
 
   try {
-    // Check if project exists
     const project = await Project.findById(payload.project).session(session);
     if (!project) {
       await deleteSingleFileFromS3(file?.key);
       throw new AppError(400, "Invalid project ID!");
     }
 
-    // Allow only if user is involved in this project
     if (
+      userId !== project.company_admin.toString() &&
       userId !== project.supervisor.toString() &&
       userId !== project.manager.toString()
     ) {
@@ -31,44 +31,38 @@ const createDayWork = async (userId: string, payload: TDayWork, file?: any) => {
       throw new AppError(401, "Unauthorized!");
     }
 
-    // Validate and deduct workforces
-    for (const workforceData of payload.workforces) {
-      const existingWorkforce = await Workforce.findById(workforceData.workforce).session(session);
-      if (!existingWorkforce) {
-        await deleteSingleFileFromS3(file?.key);
-        throw new AppError(400, `Invalid workforce ID: ${workforceData.workforce}`);
+    // check the validity of the workforces and equipments
+    for (const task of payload.tasks) {
+      for (const workforceData of task.workforces) {
+        const existingWorkforce = await Workforce.findById(workforceData.workforce).session(session);
+        if (!existingWorkforce) {
+          await deleteSingleFileFromS3(file?.key);
+          throw new AppError(400, `Invalid workforce ID: ${workforceData.workforce}`);
+        }
+        if (workforceData.quantity > existingWorkforce.quantity) {
+          await deleteSingleFileFromS3(file?.key);
+          throw new AppError(400, `Insufficient workforce quantity: ${workforceData.workforce}`);
+        }
+        existingWorkforce.quantity -= workforceData.quantity;
+        await existingWorkforce.save({ session });
       }
 
-      if (workforceData.quantity > existingWorkforce.quantity) {
-        await deleteSingleFileFromS3(file?.key);
-        throw new AppError(400, `Insufficient workforce quantity: ${workforceData.workforce}`);
+      for (const equipmentData of task.equipments) {
+        const existingEquipment = await Equipment.findById(equipmentData.equipment).session(session);
+        if (!existingEquipment) {
+          await deleteSingleFileFromS3(file?.key);
+          throw new AppError(400, `Invalid equipment ID: ${equipmentData.equipment}`);
+        }
+        if (equipmentData.quantity > existingEquipment.quantity) {
+          await deleteSingleFileFromS3(file?.key);
+          throw new AppError(400, `Insufficient equipment quantity: ${equipmentData.equipment}`);
+        }
+        existingEquipment.quantity -= equipmentData.quantity;
+        await existingEquipment.save({ session });
       }
-
-      // Deduct the workforce quantity
-      existingWorkforce.quantity -= workforceData.quantity;
-      await existingWorkforce.save({ session });
-    }
-
-    // Validate and deduct equipments
-    for (const equipmentData of payload.equipments) {
-      const existingEquipment = await Equipment.findById(equipmentData.equipment).session(session);
-      if (!existingEquipment) {
-        await deleteSingleFileFromS3(file?.key);
-        throw new AppError(400, `Invalid equipment ID: ${equipmentData.equipment}`);
-      }
-
-      if (equipmentData.quantity > existingEquipment.quantity) {
-        await deleteSingleFileFromS3(file?.key);
-        throw new AppError(400, `Insufficient equipment quantity: ${equipmentData.equipment}`);
-      }
-
-      // Deduct the equipment quantity
-      existingEquipment.quantity -= equipmentData.quantity;
-      await existingEquipment.save({ session });
     }
 
     const dayWork = await DayWork.create([payload], { session });
-
     await session.commitTransaction();
     return dayWork;
   } catch (error: any) {
@@ -81,7 +75,7 @@ const createDayWork = async (userId: string, payload: TDayWork, file?: any) => {
 };
 
 const getDayWorkById = async (id: string) => {
-  const dayWork = await DayWork.findById(id).populate("project").populate("workforces.workforce", "name").populate("equipments.equipment", "name");
+  const dayWork = await DayWork.findById(id).populate("project").populate("tasks.workforces.workforce", "name").populate("tasks.equipments.equipment", "name");
   return dayWork;
 };
 
@@ -89,16 +83,10 @@ const getProjectDayWorks = async (query: Record<string, any>, projectId: string,
   const project = await Project.findById(projectId);
   if (!project) throw new AppError(400, "Invalid project id!");
 
-  // Allow only if user is involved in this project
-  if (
-    userId !== project.company_admin.toString() &&
-    userId !== project.supervisor.toString() &&
-    userId !== project.manager.toString()
-  ) {
-    throw new AppError(401, "Unauthorized!");
-  }
-  const searchableFields = ["name", "description", "materials", "location", "comment", "delay"];
+  // Allow only if userId matches any of the roles, else throw Unauthorized
+  checkProjectAuthorization(project, userId, [userRoles.companyAdmin, userRoles.employee]);
 
+  const searchableFields = ["name", "description", "materials", "location", "comment", "delay"];
   const dayWorkQuery = new QueryBuilder(DayWork.find({ project: projectId }), query)
     .search(searchableFields)
     .filter()
@@ -118,7 +106,6 @@ const updateDayWork = async (id: string, userId: string, payload: Partial<TDayWo
   }
 
   const project = existing.project as any;
-  // Allow only if userId matches any of the roles, else throw Unauthorized
   if (
     userId !== project.company_admin.toString() &&
     userId !== project.supervisor.toString() &&
@@ -134,65 +121,56 @@ const updateDayWork = async (id: string, userId: string, payload: Partial<TDayWo
   try {
     session.startTransaction();
 
-    // Validate and deduct workforces
-    if (payload.workforces && payload.workforces?.length > 0) {
-      for (const workforceData of payload.workforces) {
-        const existingWorkforce = await Workforce.findById(workforceData.workforce).session(session);
-        if (!existingWorkforce) {
-          await deleteSingleFileFromS3(file?.key);
-          throw new AppError(400, `Invalid workforce ID: ${workforceData.workforce}`);
-        }
-
-        const previousWorkForceData = existing.workforces.find((wf) => wf.workforce.toString() === workforceData.workforce.toString());
-
-        if (previousWorkForceData) {
-          if (previousWorkForceData && previousWorkForceData.quantity < workforceData.quantity) {
-            if (workforceData.quantity - previousWorkForceData.quantity > existingWorkforce.quantity) {
-              await deleteSingleFileFromS3(file?.key);
-              throw new AppError(400, `Insufficient workforce quantity: ${workforceData.workforce}`);
-            } else {
-              // Deduct the workforce quantity
-              existingWorkforce.quantity -= workforceData.quantity - previousWorkForceData.quantity;
-              await existingWorkforce.save({ session });
+    if (payload.tasks && payload.tasks.length > 0) {
+      for (const task of payload.tasks) {
+        for (const workforceData of task.workforces) {
+          const existingWorkforce = await Workforce.findById(workforceData.workforce).session(session);
+          if (!existingWorkforce) {
+            await deleteSingleFileFromS3(file?.key);
+            throw new AppError(400, `Invalid workforce ID: ${workforceData.workforce}`);
+          }
+          const previousWorkforce = existing.tasks
+            .flatMap(t => t.workforces)
+            .find(wf => wf.workforce.toString() === workforceData.workforce.toString());
+          if (previousWorkforce) {
+            if (previousWorkforce.quantity < workforceData.quantity) {
+              if (workforceData.quantity - previousWorkforce.quantity > existingWorkforce.quantity) {
+                await deleteSingleFileFromS3(file?.key);
+                throw new AppError(400, `Insufficient workforce quantity: ${workforceData.workforce}`);
+              }
+              existingWorkforce.quantity -= workforceData.quantity - previousWorkforce.quantity;
+            } else if (previousWorkforce.quantity > workforceData.quantity) {
+              existingWorkforce.quantity += previousWorkforce.quantity - workforceData.quantity;
             }
-          } else if (previousWorkForceData.quantity > workforceData.quantity) {
-            // Increase the workforce quantity
-            existingWorkforce.quantity += previousWorkForceData.quantity - workforceData.quantity;
             await existingWorkforce.save({ session });
           }
         }
-      }
 
-      // Validate and deduct equipments
-      if (payload.equipments && payload.equipments?.length > 0) {
-        for (const equipmentData of payload.equipments) {
+        for (const equipmentData of task.equipments) {
           const existingEquipment = await Equipment.findById(equipmentData.equipment).session(session);
           if (!existingEquipment) {
             await deleteSingleFileFromS3(file?.key);
             throw new AppError(400, `Invalid equipment ID: ${equipmentData.equipment}`);
           }
-
-          const previousEquipmentData = existing.equipments.find((eq) => eq.equipment.toString() === equipmentData.equipment.toString());
-
-          if (previousEquipmentData) {
-            if (previousEquipmentData && previousEquipmentData.quantity < equipmentData.quantity) {
-              if (equipmentData.quantity - previousEquipmentData.quantity > existingEquipment.quantity) {
+          const previousEquipment = existing.tasks
+            .flatMap(t => t.equipments)
+            .find(eq => eq.equipment.toString() === equipmentData.equipment.toString());
+          if (previousEquipment) {
+            if (previousEquipment.quantity < equipmentData.quantity) {
+              if (equipmentData.quantity - previousEquipment.quantity > existingEquipment.quantity) {
                 await deleteSingleFileFromS3(file?.key);
                 throw new AppError(400, `Insufficient equipment quantity: ${equipmentData.equipment}`);
-              } else {
-                // Deduct the equipment quantity
-                existingEquipment.quantity -= equipmentData.quantity - previousEquipmentData.quantity;
-                await existingEquipment.save({ session });
               }
-            } else if (previousEquipmentData.quantity > equipmentData.quantity) {
-              // Increase the equipment quantity
-              existingEquipment.quantity += previousEquipmentData.quantity - equipmentData.quantity;
-              await existingEquipment.save({ session });
+              existingEquipment.quantity -= equipmentData.quantity - previousEquipment.quantity;
+            } else if (previousEquipment.quantity > equipmentData.quantity) {
+              existingEquipment.quantity += previousEquipment.quantity - equipmentData.quantity;
             }
+            await existingEquipment.save({ session });
           }
         }
       }
     }
+
     const updatedDayWork = await DayWork.findByIdAndUpdate(id, payload, { new: true });
     if (updatedDayWork && existing.image) await deleteSingleFileFromS3(existing.image!.split(".com/")[1]);
     await session.commitTransaction();
@@ -206,55 +184,210 @@ const updateDayWork = async (id: string, userId: string, payload: Partial<TDayWo
   }
 };
 
-const removeDayWorkWorkforce = async (dayWorkId: string, workforceId: string) => {
+const addDelay = async (dayWorkId: string, userId: string, delay: string) => {
+  const dayWork = await DayWork.findById(dayWorkId).populate("project", "company_admin supervisor manager");
+  if (!dayWork) throw new AppError(400, "Invalid day-work id!");
+
+  const project = dayWork.project as any;
+  checkProjectAuthorization(project, userId, [userRoles.employee])
+
+  dayWork.delay = delay;
+  await dayWork.save();
+  return dayWork;
+};
+
+const addComment = async (dayWorkId: string, userId: string, comment: string) => {
+  const dayWork = await DayWork.findById(dayWorkId).populate("project", "company_admin supervisor manager");
+  if (!dayWork) throw new AppError(400, "Invalid day-work id!");
+
+  const project = dayWork.project as any;
+  checkProjectAuthorization(project, userId, [userRoles.companyAdmin])
+
+  dayWork.comment = comment;
+  await dayWork.save();
+  return dayWork;
+};
+
+const addTask = async (dayWorkId: string, task: { name: string, workforces?: { workforce: ObjectId, quantity: number, duration: string }[], equipments?: { equipment: ObjectId, quantity: number, duration: string }[] }) => {
   const dayWork = await DayWork.findById(dayWorkId);
   if (!dayWork) throw new AppError(400, "Invalid day-work id!");
-  dayWork.workforces = dayWork.workforces.filter((wf) => wf.workforce.toString() !== workforceId);
 
   const session = await startSession();
-
-  const workforce = dayWork.workforces.find((wf) => wf.workforce.toString() === workforceId);
   try {
     session.startTransaction();
+
+    const normalizedWorkforces = task.workforces || [];
+    if (normalizedWorkforces.length > 0) {
+      for (const workforceData of normalizedWorkforces) {
+        const existingWorkforce = await Workforce.findById(workforceData.workforce).session(session);
+        if (!existingWorkforce) throw new AppError(400, `Invalid workforce ID: ${workforceData.workforce}`);
+        if (workforceData.quantity > existingWorkforce.quantity) throw new AppError(400, `Insufficient workforce quantity: ${workforceData.workforce}`);
+        existingWorkforce.quantity -= workforceData.quantity;
+        await existingWorkforce.save({ session });
+      }
+    }
+
+    const normalizedEquipments = task.equipments || [];
+    if (normalizedEquipments.length > 0) {
+      for (const equipmentData of normalizedEquipments) {
+        const existingEquipment = await Equipment.findById(equipmentData.equipment).session(session);
+        if (!existingEquipment) throw new AppError(400, `Invalid equipment ID: ${equipmentData.equipment}`);
+        if (equipmentData.quantity > existingEquipment.quantity) throw new AppError(400, `Insufficient equipment quantity: ${equipmentData.equipment}`);
+        existingEquipment.quantity -= equipmentData.quantity;
+        await existingEquipment.save({ session });
+      }
+    }
+
+    dayWork.tasks.push({
+      name: task.name,
+      workforces: normalizedWorkforces,
+      equipments: normalizedEquipments,
+    });
     await dayWork.save({ session });
-    await Workforce.findByIdAndUpdate(workforceId, { $inc: { quantity: workforce?.quantity } }, { session });
     await session.commitTransaction();
+    return dayWork;
   } catch (error: any) {
     await session.abortTransaction();
-    throw new AppError(500, error.message || "Error updating DayWork!");
+    throw new AppError(500, error.message || "Error adding task!");
   } finally {
     session.endSession();
   }
-}
+};
 
-const removeDayWorkEquipment = async (dayWorkId: string, equipmentId: string) => {
+const removeTask = async (dayWorkId: string, taskIndex: number) => {
   const dayWork = await DayWork.findById(dayWorkId);
   if (!dayWork) throw new AppError(400, "Invalid day-work id!");
-  dayWork.equipments = dayWork.equipments.filter((eq) => eq.equipment.toString() !== equipmentId);
+  if (taskIndex < 0 || taskIndex >= dayWork.tasks.length) throw new AppError(400, "Invalid task index!");
 
   const session = await startSession();
-
-  const equipment = dayWork.equipments.find((eq) => eq.equipment.toString() === equipmentId);
   try {
     session.startTransaction();
+
+    const task = dayWork.tasks[taskIndex];
+    for (const workforce of task.workforces) {
+      const existingWorkforce = await Workforce.findById(workforce.workforce).session(session);
+      if (existingWorkforce) {
+        existingWorkforce.quantity += workforce.quantity;
+        await existingWorkforce.save({ session });
+      }
+    }
+    for (const equipment of task.equipments) {
+      const existingEquipment = await Equipment.findById(equipment.equipment).session(session);
+      if (existingEquipment) {
+        existingEquipment.quantity += equipment.quantity;
+        await existingEquipment.save({ session });
+      }
+    }
+
+    dayWork.tasks.splice(taskIndex, 1);
     await dayWork.save({ session });
-    await Equipment.findByIdAndUpdate(equipmentId, { $inc: { quantity: equipment?.quantity } }, { session });
     await session.commitTransaction();
+    return dayWork;
   } catch (error: any) {
     await session.abortTransaction();
-    throw new AppError(500, error.message || "Error updating DayWork!");
+    throw new AppError(500, error.message || "Error removing task!");
   } finally {
     session.endSession();
   }
-}
+};
+
+const removeDayWorkWorkforce = async (dayWorkId: string, workforceId: string, taskIndex: number) => {
+  const dayWork = await DayWork.findById(dayWorkId);
+  if (!dayWork) throw new AppError(400, "Invalid day-work id!");
+  if (taskIndex < 0 || taskIndex >= dayWork.tasks.length) throw new AppError(400, "Invalid task index!");
+
+  const session = await startSession();
+  try {
+    session.startTransaction();
+
+    const task = dayWork.tasks[taskIndex];
+    const workforceToRemove = task.workforces.find(wf => wf.workforce.toString() === workforceId);
+    if (!workforceToRemove) throw new AppError(400, `Workforce ID ${workforceId} not found in task`);
+
+    const existingWorkforce = await Workforce.findById(workforceId).session(session);
+    if (existingWorkforce) {
+      existingWorkforce.quantity += workforceToRemove.quantity;
+      await existingWorkforce.save({ session });
+    }
+
+    task.workforces = task.workforces.filter(wf => wf.workforce.toString() !== workforceId);
+    await dayWork.save({ session });
+    await session.commitTransaction();
+    return dayWork;
+  } catch (error: any) {
+    await session.abortTransaction();
+    throw new AppError(500, error.message || "Error removing workforce!");
+  } finally {
+    session.endSession();
+  }
+};
+
+const removeDayWorkEquipment = async (dayWorkId: string, equipmentId: string, taskIndex: number) => {
+  const dayWork = await DayWork.findById(dayWorkId);
+  if (!dayWork) throw new AppError(400, "Invalid day-work id!");
+  if (taskIndex < 0 || taskIndex >= dayWork.tasks.length) throw new AppError(400, "Invalid task index!");
+
+  const session = await startSession();
+  try {
+    session.startTransaction();
+
+    const task = dayWork.tasks[taskIndex];
+    const equipmentToRemove = task.equipments.find(eq => eq.equipment.toString() === equipmentId);
+    if (!equipmentToRemove) throw new AppError(400, `Equipment ID ${equipmentId} not found in task`);
+
+    const existingEquipment = await Equipment.findById(equipmentId).session(session);
+    if (existingEquipment) {
+      existingEquipment.quantity += equipmentToRemove.quantity;
+      await existingEquipment.save({ session });
+    }
+
+    task.equipments = task.equipments.filter(eq => eq.equipment.toString() !== equipmentId);
+    await dayWork.save({ session });
+    await session.commitTransaction();
+    return dayWork;
+  } catch (error: any) {
+    await session.abortTransaction();
+    throw new AppError(500, error.message || "Error removing equipment!");
+  } finally {
+    session.endSession();
+  }
+};
 
 const deleteDayWork = async (id: string) => {
   const existing = await DayWork.findById(id);
   if (!existing) throw new AppError(400, "Invalid day-work id!");
 
-  const deleted = await DayWork.findByIdAndDelete(id);
-  if (deleted && existing.image) await deleteSingleFileFromS3(existing.image!.split(".com/")[1]);
-  return deleted;
+  const session = await startSession();
+  try {
+    session.startTransaction();
+
+    for (const task of existing.tasks) {
+      for (const workforce of task.workforces) {
+        const existingWorkforce = await Workforce.findById(workforce.workforce).session(session);
+        if (existingWorkforce) {
+          existingWorkforce.quantity += workforce.quantity;
+          await existingWorkforce.save({ session });
+        }
+      }
+      for (const equipment of task.equipments) {
+        const existingEquipment = await Equipment.findById(equipment.equipment).session(session);
+        if (existingEquipment) {
+          existingEquipment.quantity += equipment.quantity;
+          await existingEquipment.save({ session });
+        }
+      }
+    }
+
+    const deleted = await DayWork.findByIdAndDelete(id);
+    if (deleted && existing.image) await deleteSingleFileFromS3(existing.image!.split(".com/")[1]);
+    await session.commitTransaction();
+    return deleted;
+  } catch (error: any) {
+    await session.abortTransaction();
+    throw new AppError(500, error.message || "Error deleting DayWork!");
+  } finally {
+    session.endSession();
+  }
 };
 
 export default {
@@ -262,6 +395,10 @@ export default {
   getDayWorkById,
   getProjectDayWorks,
   updateDayWork,
+  addDelay,
+  addComment,
+  addTask,
+  removeTask,
   removeDayWorkWorkforce,
   removeDayWorkEquipment,
   deleteDayWork,

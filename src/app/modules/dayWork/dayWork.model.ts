@@ -13,16 +13,22 @@ const EquipmentSchema = new Schema({
   duration: { type: String, required: true },
 });
 
+const TaskSchema = new Schema({
+  name: { type: String, required: true },
+  workforces: { type: [WorkforceSchema], required: true },
+  equipments: { type: [EquipmentSchema], required: true },
+});
+
 const DayWorkSchema = new Schema<TDayWork>(
   {
     name: { type: String, required: true },
     project: { type: Types.ObjectId, ref: "Project", required: true },
     description: { type: String, required: true },
     date: { type: Date, required: true },
+    weather_condition: { type: String, default: null },
     duration: { type: String, required: true },
-    workforces: { type: [WorkforceSchema], required: true },
-    equipments: { type: [EquipmentSchema], required: true },
-    materials: { type: String, },
+    tasks: { type: [TaskSchema], required: true },
+    materials: { type: String },
     image: { type: String },
     location: { type: String },
     delay: { type: String },

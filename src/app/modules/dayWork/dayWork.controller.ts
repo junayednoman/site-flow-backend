@@ -3,8 +3,8 @@ import { successResponse } from "../../utils/successResponse";
 import dayWorkService from "./dayWork.service";
 
 const createDayWork = handleAsyncRequest(async (req: any, res) => {
-  const payload = JSON.parse(req.body.payload || "{}");
   const file = req.file;
+  const payload = JSON.parse(req.body.payload || "{}");
   const userId = req.user.id;
   const result = await dayWorkService.createDayWork(userId, payload, file);
   successResponse(res, {
@@ -46,12 +46,56 @@ const updateDayWork = handleAsyncRequest(async (req: any, res) => {
   });
 });
 
+const addDelay = handleAsyncRequest(async (req: any, res) => {
+  const dayWorkId = req.params.id;
+  const userId = req.user.id;
+  const delay = req.body.delay;
+  const result = await dayWorkService.addDelay(dayWorkId, userId, delay);
+  successResponse(res, {
+    message: "Delay reason added successfully!",
+    data: result,
+  });
+});
+
+const addComment = handleAsyncRequest(async (req: any, res) => {
+  const dayWorkId = req.params.id;
+  const userId = req.user.id;
+  const comment = req.body.comment;
+  const result = await dayWorkService.addComment(dayWorkId, userId, comment);
+  successResponse(res, {
+    message: "Comment added successfully!",
+    data: result,
+  });
+});
+
+const addTask = handleAsyncRequest(async (req: any, res) => {
+  const dayWorkId = req.params.id;
+  const task = req.body;
+  const result = await dayWorkService.addTask(dayWorkId, task);
+  successResponse(res, {
+    message: "Task added successfully!",
+    data: result,
+    status: 201,
+  });
+});
+
+const removeTask = handleAsyncRequest(async (req: any, res) => {
+  const dayWorkId = req.params.id;
+  const taskIndex = parseInt(req.body.task_index);
+  const result = await dayWorkService.removeTask(dayWorkId, taskIndex);
+  successResponse(res, {
+    message: "Task removed successfully!",
+    data: result,
+  });
+});
+
 const removeDayWorkWorkforce = handleAsyncRequest(async (req: any, res) => {
   const dayWorkId = req.params.id;
   const workforceId = req.body.workforce_id;
-  const result = await dayWorkService.removeDayWorkWorkforce(dayWorkId, workforceId);
+  const taskIndex = parseInt(req.body.task_index);
+  const result = await dayWorkService.removeDayWorkWorkforce(dayWorkId, workforceId, taskIndex);
   successResponse(res, {
-    message: "Day-work work force updated successfully!",
+    message: "Workforce removed from day-work successfully!",
     data: result,
   });
 });
@@ -59,9 +103,10 @@ const removeDayWorkWorkforce = handleAsyncRequest(async (req: any, res) => {
 const removeDayWorkEquipment = handleAsyncRequest(async (req: any, res) => {
   const dayWorkId = req.params.id;
   const equipmentId = req.body.equipment_id;
-  const result = await dayWorkService.removeDayWorkEquipment(dayWorkId, equipmentId);
+  const taskIndex = parseInt(req.body.task_index);
+  const result = await dayWorkService.removeDayWorkEquipment(dayWorkId, equipmentId, taskIndex);
   successResponse(res, {
-    message: "Day-work equipment updated successfully!",
+    message: "Equipment removed from day-work successfully!",
     data: result,
   });
 });
@@ -80,7 +125,11 @@ export default {
   getDayWorkById,
   getProjectDayWorks,
   updateDayWork,
-  deleteDayWork,
+  addDelay,
+  addComment,
+  addTask,
+  removeTask,
   removeDayWorkWorkforce,
   removeDayWorkEquipment,
+  deleteDayWork,
 };
