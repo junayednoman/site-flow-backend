@@ -1,25 +1,37 @@
-import mongoose from "mongoose"
-import { TPlan } from "./plan.interface"
+import { Schema, model } from "mongoose";
+import { TEquipmentTask, TPlan, TTask, TWorkforceTask } from "./plan.interface";
 
-const PlanSchema = new mongoose.Schema<TPlan>(
+const workforceTaskSchema = new Schema<TWorkforceTask>({
+  workforce: { type: Schema.Types.ObjectId, ref: "Workforce", required: true },
+  quantity: { type: Number, required: true },
+  duration: { type: String, required: true },
+});
+
+const equipmentTaskSchema = new Schema<TEquipmentTask>({
+  equipment: { type: Schema.Types.ObjectId, ref: "Equipment", required: true },
+  quantity: { type: Number, required: true },
+  duration: { type: String, required: true },
+});
+
+const taskSchema = new Schema<TTask>({
+  name: { type: String, required: true },
+  workforces: [workforceTaskSchema],
+  equipments: [equipmentTaskSchema],
+});
+
+const planSchema = new Schema<TPlan>(
   {
-    author: { type: mongoose.Schema.Types.ObjectId, ref: 'Auth', required: true },
+    added_by: { type: Schema.Types.ObjectId, ref: "Auth", required: true },
+    project: { type: Schema.Types.ObjectId, ref: "Project", required: true },
     name: { type: String, required: true },
-    project: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
-    description: { type: String, required: true },
-    date: { type: Date, required: true },
-    deadline: { type: Date, required: true },
-    workforces: {
-      type: [{ workforce: { type: mongoose.Types.ObjectId, ref: "Workforce", required: true }, quantity: Number, duration: String }],
-      required: true
-    },
-    equipments: {
-      type: [{ equipment: { type: mongoose.Types.ObjectId, ref: "Equipment", required: true }, quantity: Number, duration: String }],
-      required: true
-    }
+    date: { type: Date },
+    deadline: { type: Date },
+    tasks: [taskSchema],
   },
-  { timestamps: true }
-)
+  {
+    timestamps: true,
+  }
+);
 
-const Plan = mongoose.model<TPlan>('Plan', PlanSchema)
-export default Plan
+export const Plan = model<TPlan>("Plan", planSchema);
+export default Plan;

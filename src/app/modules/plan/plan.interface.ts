@@ -1,12 +1,30 @@
-import { ObjectId } from "mongoose"
+import { ObjectId } from "mongoose";
+
+export type TWorkforceTask = {
+  workforce: ObjectId;
+  quantity: number;
+  duration: string;
+};
+
+export type TEquipmentTask = {
+  equipment: ObjectId;
+  quantity: number;
+  duration: string;
+};
+
+export type TTask = {
+  name: string;
+  workforces: TWorkforceTask[];
+  equipments: TEquipmentTask[];
+};
 
 export type TPlan = {
-  author: ObjectId
-  name: string
-  project: ObjectId
-  description: string
-  date: Date
-  deadline: Date
-  workforces: { workforce: string; quantity: number; duration: string }[]
-  equipments: { equipment: string; quantity: number; duration: string }[]
-}
+  added_by: ObjectId;
+  project: ObjectId;
+  name: string;
+  date?: Date;
+  deadline?: Date;
+  tasks: TTask[];
+};
+
+export type TTaskPayload = { name: string, workforces?: { workforce: ObjectId, quantity: number, duration: string }[], equipments?: { equipment: ObjectId, quantity: number, duration: string }[] }

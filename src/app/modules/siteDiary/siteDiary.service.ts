@@ -1,6 +1,6 @@
-import DayWork from "./dayWork.model";
+import SiteDiary from "./siteDiary.model";
 import { AppError } from "../../classes/appError";
-import { TDayWork, TTaskPayload } from "./dayWork.interface";
+import { TSiteDiary, TTaskPayload } from "./siteDiary.interface";
 import Project from "../project/project.model";
 import Workforce from "../workforce/workforce.model";
 import Equipment from "../equipment/equipment.model";
@@ -10,7 +10,7 @@ import { deleteSingleFileFromS3 } from "../../utils/deletes3Image";
 import checkProjectAuthorization from "../../utils/checkProjectAuthorization";
 import { userRoles } from "../../constants/global.constant";
 
-const createDayWork = async (userId: string, payload: TDayWork, file?: any) => {
+const createSiteDiary = async (userId: string, payload: TSiteDiary, file?: any) => {
   payload.added_by = userId as unknown as ObjectId;
   if (file) payload.image = file.location;
   const session = await startSession();
@@ -86,20 +86,20 @@ const createDayWork = async (userId: string, payload: TDayWork, file?: any) => {
       await existingEquipment.save({ session });
     }
 
-    const dayWork = await DayWork.create([payload], { session });
+    const siteDiary = await SiteDiary.create([payload], { session });
     await session.commitTransaction();
-    return dayWork;
+    return siteDiary;
   } catch (error: any) {
     await session.abortTransaction();
     await deleteSingleFileFromS3(file?.key);
-    throw new AppError(500, error.message || "Error creating DayWork!");
+    throw new AppError(500, error.message || "Error creating SiteDiary!");
   } finally {
     session.endSession();
   }
 };
 
-const getDayWorkById = async (id: string) => {
-  const dayWork = await DayWork.findById(id).populate([
+const getSiteDiaryById = async (id: string) => {
+  const siteDiary = await SiteDiary.findById(id).populate([
     {
       path: "added_by",
       select: "user_type user",
@@ -112,33 +112,32 @@ const getDayWorkById = async (id: string) => {
     { path: "tasks.workforces.workforce", select: "name" },
     { path: "tasks.equipments.equipment", select: "name" },
   ]);
-  return dayWork;
+  return siteDiary;
 };
 
-const getProjectDayWorks = async (query: Record<string, any>, projectId: string, userId: string) => {
+const getProjectSiteDiaries = async (query: Record<string, any>, projectId: string, userId: string) => {
   const project = await Project.findById(projectId);
   if (!project) throw new AppError(400, "Invalid project id!");
 
-  // Allow only if userId matches any of the roles, else throw Unauthorized
   checkProjectAuthorization(project, userId, [userRoles.companyAdmin, userRoles.employee]);
 
-  const searchableFields = ["name", "description", "materials", "location", "comment", "delay"];
-  const dayWorkQuery = new QueryBuilder(DayWork.find({ project: projectId }), query)
+  const searchableFields = ["name", "description", "location", "comment", "delay"];
+  const siteDiaryQuery = new QueryBuilder(SiteDiary.find({ project: projectId }), query)
     .search(searchableFields)
     .filter()
     .sort()
     .paginate()
     .selectFields();
 
-  const meta = await dayWorkQuery.countTotal();
-  const result = await dayWorkQuery.queryModel;
+  const meta = await siteDiaryQuery.countTotal();
+  const result = await siteDiaryQuery.queryModel;
   return { data: result, meta };
 };
 
-const updateDayWork = async (id: string, userId: string, payload: Partial<TDayWork>, file?: any) => {
-  const existing = await DayWork.findById(id).populate("project", "company_admin supervisor manager");
+const updateSiteDiary = async (id: string, userId: string, payload: Partial<TSiteDiary>, file?: any) => {
+  const existing = await SiteDiary.findById(id).populate("project", "company_admin supervisor manager");
   if (!existing) {
-    throw new AppError(400, "Invalid day-work id!");
+    throw new AppError(400, "Invalid site-diary id!");
   }
 
   const project = existing.project as any;
@@ -215,46 +214,46 @@ const updateDayWork = async (id: string, userId: string, payload: Partial<TDayWo
       }
     }
 
-    const updatedDayWork = await DayWork.findByIdAndUpdate(id, payload, { new: true });
-    if (updatedDayWork && existing.image) await deleteSingleFileFromS3(existing.image!.split(".com/")[1]);
+    const updatedSiteDiary = await SiteDiary.findByIdAndUpdate(id, payload, { new: true });
+    if (updatedSiteDiary && existing.image) await deleteSingleFileFromS3(existing.image!.split(".com/")[1]);
     await session.commitTransaction();
-    return updatedDayWork;
+    return updatedSiteDiary;
   } catch (error: any) {
     await session.abortTransaction();
     await deleteSingleFileFromS3(file?.key);
-    throw new AppError(500, error.message || "Error updating DayWork!");
+    throw new AppError(500, error.message || "Error updating SiteDiary!");
   } finally {
     session.endSession();
   }
 };
 
-const addDelay = async (dayWorkId: string, userId: string, delay: string) => {
-  const dayWork = await DayWork.findById(dayWorkId).populate("project", "company_admin supervisor manager");
-  if (!dayWork) throw new AppError(400, "Invalid day-work id!");
+const addDelay = async (siteDiaryId: string, userId: string, delay: string) => {
+  const siteDiary = await SiteDiary.findById(siteDiaryId).populate("project", "company_admin supervisor manager");
+  if (!siteDiary) throw new AppError(400, "Invalid site-diary id!");
 
-  const project = dayWork.project as any;
-  checkProjectAuthorization(project, userId, [userRoles.employee])
+  const project = siteDiary.project as any;
+  checkProjectAuthorization(project, userId, [userRoles.employee]);
 
-  dayWork.delay = delay;
-  await dayWork.save();
-  return dayWork;
+  siteDiary.delay = delay;
+  await siteDiary.save();
+  return siteDiary;
 };
 
-const addComment = async (dayWorkId: string, userId: string, comment: string) => {
-  const dayWork = await DayWork.findById(dayWorkId).populate("project", "company_admin supervisor manager");
-  if (!dayWork) throw new AppError(400, "Invalid day-work id!");
+const addComment = async (siteDiaryId: string, userId: string, comment: string) => {
+  const siteDiary = await SiteDiary.findById(siteDiaryId).populate("project", "company_admin supervisor manager");
+  if (!siteDiary) throw new AppError(400, "Invalid site-diary id!");
 
-  const project = dayWork.project as any;
-  checkProjectAuthorization(project, userId, [userRoles.companyAdmin])
+  const project = siteDiary.project as any;
+  checkProjectAuthorization(project, userId, [userRoles.companyAdmin]);
 
-  dayWork.comment = comment;
-  await dayWork.save();
-  return dayWork;
+  siteDiary.comment = comment;
+  await siteDiary.save();
+  return siteDiary;
 };
 
-const addTask = async (dayWorkId: string, task: TTaskPayload) => {
-  const dayWork = await DayWork.findById(dayWorkId);
-  if (!dayWork) throw new AppError(400, "Invalid day-work id!");
+const addTask = async (siteDiaryId: string, task: TTaskPayload) => {
+  const siteDiary = await SiteDiary.findById(siteDiaryId);
+  if (!siteDiary) throw new AppError(400, "Invalid site-diary id!");
 
   const session = await startSession();
   try {
@@ -265,8 +264,8 @@ const addTask = async (dayWorkId: string, task: TTaskPayload) => {
       for (const workforceData of normalizedWorkforces) {
         const existingWorkforce = await Workforce.findById(workforceData.workforce).session(session);
         if (!existingWorkforce) throw new AppError(400, `Invalid workforce ID: ${workforceData.workforce}`);
-        if (existingWorkforce.project.toString() !== dayWork.project.toString()) {
-          throw new AppError(400, `Workforce ${workforceData.workforce} is not associated with project ${dayWork.project}`);
+        if (existingWorkforce.project.toString() !== siteDiary.project.toString()) {
+          throw new AppError(400, `Workforce ${workforceData.workforce} is not associated with project ${siteDiary.project}`);
         }
         if (workforceData.quantity > existingWorkforce.quantity) throw new AppError(400, `Insufficient workforce quantity: ${workforceData.workforce}`);
         existingWorkforce.quantity -= workforceData.quantity;
@@ -279,8 +278,8 @@ const addTask = async (dayWorkId: string, task: TTaskPayload) => {
       for (const equipmentData of normalizedEquipments) {
         const existingEquipment = await Equipment.findById(equipmentData.equipment).session(session);
         if (!existingEquipment) throw new AppError(400, `Invalid equipment ID: ${equipmentData.equipment}`);
-        if (existingEquipment.project.toString() !== dayWork.project.toString()) {
-          throw new AppError(400, `Equipment ${equipmentData.equipment} is not associated with project ${dayWork.project}`);
+        if (existingEquipment.project.toString() !== siteDiary.project.toString()) {
+          throw new AppError(400, `Equipment ${equipmentData.equipment} is not associated with project ${siteDiary.project}`);
         }
         if (equipmentData.quantity > existingEquipment.quantity) throw new AppError(400, `Insufficient equipment quantity: ${equipmentData.equipment}`);
         existingEquipment.quantity -= equipmentData.quantity;
@@ -288,14 +287,14 @@ const addTask = async (dayWorkId: string, task: TTaskPayload) => {
       }
     }
 
-    dayWork.tasks.push({
+    siteDiary.tasks.push({
       name: task.name,
       workforces: normalizedWorkforces,
       equipments: normalizedEquipments,
     });
-    await dayWork.save({ session });
+    await siteDiary.save({ session });
     await session.commitTransaction();
-    return dayWork;
+    return siteDiary;
   } catch (error: any) {
     await session.abortTransaction();
     throw new AppError(500, error.message || "Error adding task!");
@@ -304,16 +303,16 @@ const addTask = async (dayWorkId: string, task: TTaskPayload) => {
   }
 };
 
-const removeTask = async (dayWorkId: string, taskIndex: number) => {
-  const dayWork = await DayWork.findById(dayWorkId);
-  if (!dayWork) throw new AppError(400, "Invalid day-work id!");
-  if (taskIndex < 0 || taskIndex >= dayWork.tasks.length) throw new AppError(400, "Invalid task index!");
+const removeTask = async (siteDiaryId: string, taskIndex: number) => {
+  const siteDiary = await SiteDiary.findById(siteDiaryId);
+  if (!siteDiary) throw new AppError(400, "Invalid site-diary id!");
+  if (taskIndex < 0 || taskIndex >= siteDiary.tasks.length) throw new AppError(400, "Invalid task index!");
 
   const session = await startSession();
   try {
     session.startTransaction();
 
-    const task = dayWork.tasks[taskIndex];
+    const task = siteDiary.tasks[taskIndex];
     for (const workforce of task.workforces) {
       const existingWorkforce = await Workforce.findById(workforce.workforce).session(session);
       if (existingWorkforce) {
@@ -329,10 +328,10 @@ const removeTask = async (dayWorkId: string, taskIndex: number) => {
       }
     }
 
-    dayWork.tasks.splice(taskIndex, 1);
-    await dayWork.save({ session });
+    siteDiary.tasks.splice(taskIndex, 1);
+    await siteDiary.save({ session });
     await session.commitTransaction();
-    return dayWork;
+    return siteDiary;
   } catch (error: any) {
     await session.abortTransaction();
     throw new AppError(500, error.message || "Error removing task!");
@@ -341,16 +340,16 @@ const removeTask = async (dayWorkId: string, taskIndex: number) => {
   }
 };
 
-const removeDayWorkWorkforce = async (dayWorkId: string, workforceId: string, taskIndex: number) => {
-  const dayWork = await DayWork.findById(dayWorkId);
-  if (!dayWork) throw new AppError(400, "Invalid day-work id!");
-  if (taskIndex < 0 || taskIndex >= dayWork.tasks.length) throw new AppError(400, "Invalid task index!");
+const removeSiteDiaryWorkforce = async (siteDiaryId: string, workforceId: string, taskIndex: number) => {
+  const siteDiary = await SiteDiary.findById(siteDiaryId);
+  if (!siteDiary) throw new AppError(400, "Invalid site-diary id!");
+  if (taskIndex < 0 || taskIndex >= siteDiary.tasks.length) throw new AppError(400, "Invalid task index!");
 
   const session = await startSession();
   try {
     session.startTransaction();
 
-    const task = dayWork.tasks[taskIndex];
+    const task = siteDiary.tasks[taskIndex];
     const workforceToRemove = task.workforces.find(wf => wf.workforce.toString() === workforceId);
     if (!workforceToRemove) throw new AppError(400, `Workforce ID ${workforceId} not found in task`);
 
@@ -361,9 +360,9 @@ const removeDayWorkWorkforce = async (dayWorkId: string, workforceId: string, ta
     }
 
     task.workforces = task.workforces.filter(wf => wf.workforce.toString() !== workforceId);
-    await dayWork.save({ session });
+    await siteDiary.save({ session });
     await session.commitTransaction();
-    return dayWork;
+    return siteDiary;
   } catch (error: any) {
     await session.abortTransaction();
     throw new AppError(500, error.message || "Error removing workforce!");
@@ -372,16 +371,16 @@ const removeDayWorkWorkforce = async (dayWorkId: string, workforceId: string, ta
   }
 };
 
-const removeDayWorkEquipment = async (dayWorkId: string, equipmentId: string, taskIndex: number) => {
-  const dayWork = await DayWork.findById(dayWorkId);
-  if (!dayWork) throw new AppError(400, "Invalid day-work id!");
-  if (taskIndex < 0 || taskIndex >= dayWork.tasks.length) throw new AppError(400, "Invalid task index!");
+const removeSiteDiaryEquipment = async (siteDiaryId: string, equipmentId: string, taskIndex: number) => {
+  const siteDiary = await SiteDiary.findById(siteDiaryId);
+  if (!siteDiary) throw new AppError(400, "Invalid site-diary id!");
+  if (taskIndex < 0 || taskIndex >= siteDiary.tasks.length) throw new AppError(400, "Invalid task index!");
 
   const session = await startSession();
   try {
     session.startTransaction();
 
-    const task = dayWork.tasks[taskIndex];
+    const task = siteDiary.tasks[taskIndex];
     const equipmentToRemove = task.equipments.find(eq => eq.equipment.toString() === equipmentId);
     if (!equipmentToRemove) throw new AppError(400, `Equipment ID ${equipmentId} not found in task`);
 
@@ -392,9 +391,9 @@ const removeDayWorkEquipment = async (dayWorkId: string, equipmentId: string, ta
     }
 
     task.equipments = task.equipments.filter(eq => eq.equipment.toString() !== equipmentId);
-    await dayWork.save({ session });
+    await siteDiary.save({ session });
     await session.commitTransaction();
-    return dayWork;
+    return siteDiary;
   } catch (error: any) {
     await session.abortTransaction();
     throw new AppError(500, error.message || "Error removing equipment!");
@@ -403,9 +402,9 @@ const removeDayWorkEquipment = async (dayWorkId: string, equipmentId: string, ta
   }
 };
 
-const deleteDayWork = async (id: string) => {
-  const existing = await DayWork.findById(id);
-  if (!existing) throw new AppError(400, "Invalid day-work id!");
+const deleteSiteDiary = async (id: string) => {
+  const existing = await SiteDiary.findById(id);
+  if (!existing) throw new AppError(400, "Invalid site-diary id!");
 
   const session = await startSession();
   try {
@@ -428,28 +427,28 @@ const deleteDayWork = async (id: string) => {
       }
     }
 
-    const deleted = await DayWork.findByIdAndDelete(id);
+    const deleted = await SiteDiary.findByIdAndDelete(id);
     if (deleted && existing.image) await deleteSingleFileFromS3(existing.image!.split(".com/")[1]);
     await session.commitTransaction();
     return deleted;
   } catch (error: any) {
     await session.abortTransaction();
-    throw new AppError(500, error.message || "Error deleting DayWork!");
+    throw new AppError(500, error.message || "Error deleting SiteDiary!");
   } finally {
     session.endSession();
   }
 };
 
 export default {
-  createDayWork,
-  getDayWorkById,
-  getProjectDayWorks,
-  updateDayWork,
+  createSiteDiary,
+  getSiteDiaryById,
+  getProjectSiteDiaries,
+  updateSiteDiary,
   addDelay,
   addComment,
   addTask,
   removeTask,
-  removeDayWorkWorkforce,
-  removeDayWorkEquipment,
-  deleteDayWork,
+  removeSiteDiaryWorkforce,
+  removeSiteDiaryEquipment,
+  deleteSiteDiary,
 };

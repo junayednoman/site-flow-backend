@@ -1,44 +1,51 @@
-import { z } from "zod"
+import { z } from "zod";
 
-export const planZodSchema = z.object({
-  name: z.string(),
-  project: z.string(),
-  description: z.string(),
-  date: z.coerce.date(),
-  deadline: z.coerce.date(),
-  workforces: z.array(
-    z.object({
-      workforce: z.string(),
-      quantity: z.number(),
-      duration: z.string()
-    })
-  ),
-  equipments: z.array(
-    z.object({
-      equipment: z.string(),
-      quantity: z.number(),
-      duration: z.string()
-    })
-  )
-})
+const workforceTaskValidation = z.object({
+  workforce: z.string().refine((val) => /^[0-9a-fA-F]{24}$/.test(val), {
+    message: "Invalid workforce ID",
+  }),
+  quantity: z.number().min(1, "Quantity must be at least 1"),
+  duration: z.string().min(1, "Duration is required"),
+});
 
-export const updatePlanZodSchema = z.object({
-  name: z.string().optional(),
-  description: z.string().optional(),
-  date: z.coerce.date().optional(),
-  deadline: z.coerce.date().optional(),
-  workforces: z.array(
-    z.object({
-      workforce: z.string(),
-      quantity: z.number(),
-      duration: z.string()
-    })
-  ).optional(),
-  equipments: z.array(
-    z.object({
-      equipment: z.string(),
-      quantity: z.number(),
-      duration: z.string()
-    })
-  ).optional()
-})
+const equipmentTaskValidation = z.object({
+  equipment: z.string().refine((val) => /^[0-9a-fA-F]{24}$/.test(val), {
+    message: "Invalid equipment ID",
+  }),
+  quantity: z.number().min(1, "Quantity must be at least 1"),
+  duration: z.string().min(1, "Duration is required"),
+});
+
+const taskValidation = z.object({
+  name: z.string().min(1, "Task name is required"),
+  workforces: z.array(workforceTaskValidation).optional(),
+  equipments: z.array(equipmentTaskValidation).optional(),
+});
+
+const createPlanValidation = z.object({
+  project: z.string().refine((val) => /^[0-9a-fA-F]{24}$/.test(val), {
+    message: "Invalid project ID",
+  }),
+  name: z.string().min(1, "Name is required"),
+  date: z.string().optional(),
+  deadline: z.string().optional(),
+  tasks: z.array(taskValidation).min(1, "At least one task is required"),
+});
+
+const updatePlanValidation = z.object({
+  project: z.string().refine((val) => /^[0-9a-fA-F]{24}$/.test(val), {
+    message: "Invalid project ID",
+  }).optional(),
+  name: z.string().min(1, "Name is required").optional(),
+  date: z.string().optional(),
+  deadline: z.string().optional(),
+  tasks: z.array(taskValidation).optional(),
+});
+
+const addTaskValidation = z.object({
+  name: z.string().min(1, "Task name is required"),
+  workforces: z.array(workforceTaskValidation).optional(),
+  equipments: z.array(equipmentTaskValidation).optional(),
+});
+
+export { createPlanValidation, updatePlanValidation, addTaskValidation };

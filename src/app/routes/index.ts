@@ -15,6 +15,7 @@ import workforceRoutes from "../modules/workforce/workforce.routes";
 import equipmentRoutes from "../modules/equipment/equipment.routes";
 import dayWorkRouters from "../modules/dayWork/dayWork.routes";
 import planRoutes from "../modules/plan/plan.routes";
+import siteDiaryRouters from "../modules/siteDiary/siteDiary.routes";
 
 const router = Router();
 
@@ -34,6 +35,7 @@ const apiRoutes = [
   { path: "/workforces", route: workforceRoutes },
   { path: "/equipments", route: equipmentRoutes },
   { path: "/day-works", route: dayWorkRouters },
+  { path: "/site-diaries", route: siteDiaryRouters },
   { path: "/plans", route: planRoutes },
 ];
 

@@ -1,6 +1,6 @@
 import { ObjectId } from "mongoose";
 
-export type TDayWork = {
+export type TSiteDiary = {
   added_by: ObjectId;
   name: string;
   project: ObjectId;
@@ -21,7 +21,6 @@ export type TDayWork = {
       duration: string;
     }[];
   }[];
-  materials: string;
   image?: string;
   location: string;
   delay?: string;
