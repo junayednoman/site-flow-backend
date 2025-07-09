@@ -1,6 +1,5 @@
-import { ObjectId, startSession } from "mongoose";
 import { AppError } from "../../classes/appError";
-import QueryBuilder from "../../classes/queryBuilder";
+import mongoose, { ObjectId, startSession } from "mongoose";
 import { userRoles } from "../../constants/global.constant";
 import { sendEmail } from "../../utils/sendEmail";
 import Auth from "../auth/auth.model";
@@ -11,6 +10,7 @@ import fs from "fs";
 import Equipment from "../equipment/equipment.model";
 import Workforce from "../workforce/workforce.model";
 import DayWork from "../dayWork/dayWork.model";
+import AggregationBuilder from "../../classes/AggregationBuilder";
 
 const createProject = async (id: string, payload: TProjectType) => {
   const supervisor = await Employee.findById(payload.supervisor);
@@ -60,21 +60,55 @@ const createProject = async (id: string, payload: TProjectType) => {
 }
 
 const getMyProjects = async (query: Record<string, any>, userRole: "employee" | "company_admin", userId: string) => {
-  const searchableFields = [
-    "name",
-    "client_name"
-  ];
+  const searchableFields = ["name", "client_name"];
+
+  // Convert userId to ObjectId
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+
   // Role based query
   let roleQuery = {};
-  if (userRole == userRoles.companyAdmin) {
-    roleQuery = { company_admin: userId }
-  } else if (userRole == userRoles.employee) {
-    roleQuery = { $or: [{ supervisor: userId }, { manager: userId }] }
+  if (userRole === userRoles.companyAdmin) {
+    roleQuery = { company_admin: userObjectId };
+  } else if (userRole === userRoles.employee) {
+    roleQuery = { $or: [{ supervisor: userObjectId }, { manager: userObjectId }] };
   }
-  const projectQuery = new QueryBuilder(
-    Project.find(roleQuery),
-    query
-  )
+
+  // Merge roleQuery into the query object to ensure it’s applied in all $match stages
+  const combinedQuery = { ...roleQuery, ...query };
+
+  const projectQuery = new AggregationBuilder(Project, [
+    {
+      $match: roleQuery,
+    },
+    {
+      $lookup: {
+        from: "dayworks",
+        localField: "_id",
+        foreignField: "project",
+        as: "dayWorks",
+      },
+    },
+    {
+      $project: {
+        name: 1,
+        location: 1,
+        company_admin: 1,
+        totalDayWork: { $size: "$dayWorks" },
+        dayWorkImages: {
+          $reduce: {
+            input: "$dayWorks",
+            initialValue: [],
+            in: {
+              $concatArrays: [
+                "$$value",
+                [{ $ifNull: ["$$this.image", null] }]
+              ]
+            }
+          }
+        },
+      },
+    },
+  ], combinedQuery)
     .search(searchableFields)
     .filter()
     .sort()
@@ -82,9 +116,16 @@ const getMyProjects = async (query: Record<string, any>, userRole: "employee" | 
     .selectFields();
 
   const meta = await projectQuery.countTotal();
-  const result = await projectQuery.queryModel
-  return { data: result, meta };
-}
+  const result = await projectQuery.execute();
+
+  // Filter out null values from dayWorkImages
+  const cleanedResult = result.map((project: any) => ({
+    ...project,
+    dayWorkImages: project.dayWorkImages.filter((img: any) => img !== null),
+  }));
+
+  return { data: cleanedResult, meta };
+};
 
 const getSingleProject = async (id: string, userRole: "employee" | "company_admin", userId: string) => {
   // Role based query
