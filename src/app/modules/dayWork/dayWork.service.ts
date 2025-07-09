@@ -76,14 +76,19 @@ const createDayWork = async (userId: string, payload: TDayWork, file?: any) => {
 };
 
 const getDayWorkById = async (id: string) => {
-  // ----------------  --------------------------- //
-  // ----------------  --------------------------- //
-
-  // populate data based on figma(only required fields)
-
-  // ----------------  --------------------------- //
-  // ----------------  --------------------------- //
-  const dayWork = await DayWork.findById(id).populate("project", "name").populate("tasks.workforces.workforce", "name").populate("tasks.equipments.equipment", "name");
+  const dayWork = await DayWork.findById(id).populate([
+    {
+      path: "added_by",
+      select: "user_type user",
+      populate: {
+        path: "user",
+        select: "name type",
+      },
+    },
+    { path: "project", select: "name" },
+    { path: "tasks.workforces.workforce", select: "name" },
+    { path: "tasks.equipments.equipment", select: "name" },
+  ]);
   return dayWork;
 };
 
