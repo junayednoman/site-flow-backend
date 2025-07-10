@@ -89,11 +89,20 @@ const getMyProjects = async (query: Record<string, any>, userRole: "employee" | 
       },
     },
     {
+      $lookup: {
+        from: "sitediaries",
+        localField: "_id",
+        foreignField: "project",
+        as: "siteDiary",
+      }
+    },
+    {
       $project: {
         name: 1,
         location: 1,
         company_admin: 1,
         totalDayWork: { $size: "$dayWorks" },
+        totalSiteDiary: { $size: "$siteDiary" },
         dayWorkImages: {
           $reduce: {
             input: "$dayWorks",
@@ -119,12 +128,12 @@ const getMyProjects = async (query: Record<string, any>, userRole: "employee" | 
   const result = await projectQuery.execute();
 
   // Filter out null values from dayWorkImages
-  const cleanedResult = result.map((project: any) => ({
-    ...project,
-    dayWorkImages: project.dayWorkImages.filter((img: any) => img !== null),
-  }));
+  // const cleanedResult = result.map((project: any) => ({
+  //   ...project,
+  //   dayWorkImages: project.dayWorkImages.filter((img: any) => img !== null),
+  // }));
 
-  return { data: cleanedResult, meta };
+  return { data: result, meta };
 };
 
 const getSingleProject = async (id: string, userRole: "employee" | "company_admin", userId: string) => {

@@ -27,8 +27,8 @@ const createPlanValidation = z.object({
     message: "Invalid project ID",
   }),
   name: z.string().min(1, "Name is required"),
-  date: z.string().optional(),
-  deadline: z.string().optional(),
+  due_date: z.string().optional(),
+  due_time: z.string().optional(),
   tasks: z.array(taskValidation).min(1, "At least one task is required"),
 });
 
@@ -37,8 +37,8 @@ const updatePlanValidation = z.object({
     message: "Invalid project ID",
   }).optional(),
   name: z.string().min(1, "Name is required").optional(),
-  date: z.string().optional(),
-  deadline: z.string().optional(),
+  due_date: z.string().optional(),
+  due_time: z.string().optional(),
   tasks: z.array(taskValidation).optional(),
 });
 

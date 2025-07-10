@@ -22,8 +22,8 @@ export type TPlan = {
   added_by: ObjectId;
   project: ObjectId;
   name: string;
-  date?: Date;
-  deadline?: Date;
+  due_date?: Date;
+  due_time?: Date;
   tasks: TTask[];
 };
 

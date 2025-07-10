@@ -4,10 +4,10 @@ import { TPlan, TTaskPayload } from "./plan.interface";
 import Project from "../project/project.model";
 import Workforce from "../workforce/workforce.model";
 import Equipment from "../equipment/equipment.model";
-import QueryBuilder from "../../classes/queryBuilder";
-import { ObjectId, startSession } from "mongoose";
+import mongoose, { ObjectId, startSession } from "mongoose";
 import checkProjectAuthorization from "../../utils/checkProjectAuthorization";
 import { userRoles } from "../../constants/global.constant";
+import AggregationBuilder from "../../classes/AggregationBuilder";
 
 const createPlan = async (userId: string, payload: TPlan) => {
   payload.added_by = userId as unknown as ObjectId;
@@ -94,15 +94,65 @@ const getProjectPlans = async (query: Record<string, any>, projectId: string, us
   checkProjectAuthorization(project, userId, [userRoles.companyAdmin, userRoles.employee]);
 
   const searchableFields = ["name"];
-  const planQuery = new QueryBuilder(Plan.find({ project: projectId }), query)
+  const planQuery = new AggregationBuilder(Plan, [
+    { $match: { project: new mongoose.Types.ObjectId(projectId) } },
+    {
+      $addFields: {
+        totalWorkforces: {
+          $sum: {
+            $map: {
+              input: "$tasks",
+              as: "task",
+              in: {
+                $sum: {
+                  $map: {
+                    input: "$$task.workforces",
+                    as: "w",
+                    in: "$$w.quantity"
+                  }
+                }
+              }
+            }
+          }
+        },
+        totalEquipments: {
+          $sum: {
+            $map: {
+              input: "$tasks",
+              as: "task",
+              in: {
+                $sum: {
+                  $map: {
+                    input: "$$task.equipments",
+                    as: "e",
+                    in: "$$e.quantity"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      $project: {
+        name: 1,
+        totalWorkforces: 1,
+        totalEquipments: 1,
+        due_date: 1,
+        due_time: 1
+      }
+    }
+  ])
     .search(searchableFields)
     .filter()
     .sort()
     .paginate()
     .selectFields();
 
+
   const meta = await planQuery.countTotal();
-  const result = await planQuery.queryModel;
+  const result = await planQuery.execute();
   return { data: result, meta };
 };
 

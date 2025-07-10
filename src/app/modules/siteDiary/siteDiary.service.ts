@@ -4,11 +4,11 @@ import { TSiteDiary, TTaskPayload } from "./siteDiary.interface";
 import Project from "../project/project.model";
 import Workforce from "../workforce/workforce.model";
 import Equipment from "../equipment/equipment.model";
-import QueryBuilder from "../../classes/queryBuilder";
-import { ObjectId, startSession } from "mongoose";
+import mongoose, { ObjectId, startSession } from "mongoose";
 import { deleteSingleFileFromS3 } from "../../utils/deletes3Image";
 import checkProjectAuthorization from "../../utils/checkProjectAuthorization";
 import { userRoles } from "../../constants/global.constant";
+import AggregationBuilder from "../../classes/AggregationBuilder";
 
 const createSiteDiary = async (userId: string, payload: TSiteDiary, file?: any) => {
   payload.added_by = userId as unknown as ObjectId;
@@ -122,15 +122,63 @@ const getProjectSiteDiaries = async (query: Record<string, any>, projectId: stri
   checkProjectAuthorization(project, userId, [userRoles.companyAdmin, userRoles.employee]);
 
   const searchableFields = ["name", "description", "location", "comment", "delay"];
-  const siteDiaryQuery = new QueryBuilder(SiteDiary.find({ project: projectId }), query)
+  const dayWorkQuery = new AggregationBuilder(SiteDiary, [
+    { $match: { project: new mongoose.Types.ObjectId(projectId) } },
+    {
+      $addFields: {
+        totalWorkforces: {
+          $sum: {
+            $map: {
+              input: "$tasks",
+              as: "task",
+              in: {
+                $sum: {
+                  $map: {
+                    input: "$$task.workforces",
+                    as: "w",
+                    in: "$$w.quantity"
+                  }
+                }
+              }
+            }
+          }
+        },
+        totalEquipments: {
+          $sum: {
+            $map: {
+              input: "$tasks",
+              as: "task",
+              in: {
+                $sum: {
+                  $map: {
+                    input: "$$task.equipments",
+                    as: "e",
+                    in: "$$e.quantity"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      $project: {
+        name: 1,
+        duration: 1,
+        totalWorkforces: 1,
+        totalEquipments: 1
+      }
+    }
+  ])
     .search(searchableFields)
     .filter()
     .sort()
     .paginate()
     .selectFields();
 
-  const meta = await siteDiaryQuery.countTotal();
-  const result = await siteDiaryQuery.queryModel;
+  const meta = await dayWorkQuery.countTotal();
+  const result = await dayWorkQuery.execute();
   return { data: result, meta };
 };
 

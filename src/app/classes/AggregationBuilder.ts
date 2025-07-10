@@ -48,7 +48,6 @@ class AggregationBuilder {
     } else if (Object.keys(queryObject).length > 0) {
       this.pipeline.push({ $match: queryObject });
     }
-    console.log('Pipeline after filter:', JSON.stringify(this.pipeline, null, 2)); // Debug log
     return this;
   }
 
@@ -103,7 +102,6 @@ class AggregationBuilder {
   }
 
   async execute() {
-    console.log('Final Pipeline:', JSON.stringify(this.pipeline, null, 2)); // Debug log
     return await this.model.aggregate(this.pipeline);
   }
 }

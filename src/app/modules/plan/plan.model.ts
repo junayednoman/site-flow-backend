@@ -24,8 +24,8 @@ const planSchema = new Schema<TPlan>(
     added_by: { type: Schema.Types.ObjectId, ref: "Auth", required: true },
     project: { type: Schema.Types.ObjectId, ref: "Project", required: true },
     name: { type: String, required: true },
-    date: { type: Date },
-    deadline: { type: Date },
+    due_date: { type: Date },
+    due_time: { type: Date },
     tasks: [taskSchema],
   },
   {
