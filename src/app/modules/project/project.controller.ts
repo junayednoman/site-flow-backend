@@ -46,15 +46,6 @@ const updateProject = handleAsyncRequest(async (req: any, res) => {
   });
 });
 
-const deleteProject = handleAsyncRequest(async (req: any, res) => {
-  const id = req.params.id;
-  const userId = req.user.id;
-  const result = await projectService.deleteProject(id, userId);
-  successResponse(res, {
-    message: "Project deleted successfully!",
-    data: result
-  });
-});
 
-const projectController = { createProject, getMyProjects, getSingleProject, updateProject, deleteProject };
+const projectController = { createProject, getMyProjects, getSingleProject, updateProject };
 export default projectController;

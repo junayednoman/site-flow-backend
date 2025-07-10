@@ -1,5 +1,5 @@
 import { AppError } from "../../classes/appError";
-import mongoose, { ObjectId, startSession } from "mongoose";
+import mongoose, { ObjectId } from "mongoose";
 import { userRoles } from "../../constants/global.constant";
 import { sendEmail } from "../../utils/sendEmail";
 import Auth from "../auth/auth.model";
@@ -7,9 +7,6 @@ import { Employee } from "../employee/employee.model";
 import { TProjectType } from "./project.interface";
 import Project from "./project.model";
 import fs from "fs";
-import Equipment from "../equipment/equipment.model";
-import Workforce from "../workforce/workforce.model";
-import DayWork from "../dayWork/dayWork.model";
 import AggregationBuilder from "../../classes/AggregationBuilder";
 
 const createProject = async (id: string, payload: TProjectType) => {
@@ -157,28 +154,5 @@ const updateProject = async (id: string, userId: string, payload: TProjectType) 
   return result;
 }
 
-const deleteProject = async (id: string, userId: string) => {
-  const project = await Project.findById(id);
-  if (!project) throw new AppError(400, "Invalid project id!");
-  if (project.company_admin.toString() !== userId) throw new AppError(401, "Unauthorized!");
-  const session = await startSession();
-  try {
-    session.startTransaction();
-
-    const result = await Project.findByIdAndDelete(id, { session });
-    await Equipment.findOneAndDelete({ project: id }, { session });
-    await Workforce.findOneAndDelete({ project: id }, { session });
-    await DayWork.findOneAndDelete({ project: id }, { session });
-    await session.commitTransaction();
-    return result;
-  } catch (error: any) {
-    await session.abortTransaction();
-    throw new AppError(500, error.message || "Something went wrong!");
-  }
-  finally {
-    session.endSession();
-  }
-}
-
-const projectService = { createProject, getMyProjects, getSingleProject, updateProject, deleteProject };
+const projectService = { createProject, getMyProjects, getSingleProject, updateProject };
 export default projectService;

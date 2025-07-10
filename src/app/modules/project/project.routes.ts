@@ -11,6 +11,5 @@ projectRoutes.post("/", authVerify([userRoles.companyAdmin]), handleZodValidatio
 projectRoutes.get("/", authVerify([userRoles.companyAdmin, userRoles.employee]), projectController.getMyProjects);
 projectRoutes.get("/:id", authVerify([userRoles.companyAdmin, userRoles.employee]), projectController.getSingleProject);
 projectRoutes.put("/:id", authVerify([userRoles.companyAdmin]), handleZodValidation(UpdateProjectValidationSchema), projectController.updateProject);
-projectRoutes.delete("/:id", authVerify([userRoles.companyAdmin]), projectController.deleteProject);
 
 export default projectRoutes;
