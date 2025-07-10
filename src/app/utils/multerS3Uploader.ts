@@ -31,9 +31,14 @@ export const upload = multer({
     // Allowed file types for images and videos
     const allowedMimeTypes = [
       "image/jpeg", "image/png", "image/gif", "image/jpg", "image/webp", // Image types
-      "video/mp4", "video/webm", "video/avi", "video/mkv", "video/mov"  // Video types
+      "video/mp4", "video/webm", "video/avi", "video/mkv", "video/mov",  // Video types
+      "application/pdf",                                              // Documents (PDF)
+      "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // Word (.doc, .docx)
+      "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // Excel (.xls, .xlsx)
+      "image/vnd.dwg",                                                // AutoCAD Drawing (.dwg)
+      "application/dxf",                                              // Drawing Exchange Format (.dxf)
+      "application/ifc"                                               // Industry Foundation Classes (.ifc)
     ];
-
     if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
@@ -43,6 +48,6 @@ export const upload = multer({
     }
   },
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100 MB limit
+    fileSize: 200 * 1024 * 1024, // 100 MB limit
   },
 });

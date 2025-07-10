@@ -16,6 +16,7 @@ import equipmentRoutes from "../modules/equipment/equipment.routes";
 import dayWorkRouters from "../modules/dayWork/dayWork.routes";
 import planRoutes from "../modules/plan/plan.routes";
 import siteDiaryRouters from "../modules/siteDiary/siteDiary.routes";
+import folderRoutes from "../modules/folder/folder.routes";
 
 const router = Router();
 
@@ -37,6 +38,7 @@ const apiRoutes = [
   { path: "/day-works", route: dayWorkRouters },
   { path: "/site-diaries", route: siteDiaryRouters },
   { path: "/plans", route: planRoutes },
+  { path: "/folders", route: folderRoutes },
 ];
 
 apiRoutes.forEach((route) => {
