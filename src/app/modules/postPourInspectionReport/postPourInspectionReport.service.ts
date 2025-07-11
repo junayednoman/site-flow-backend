@@ -1,13 +1,13 @@
 import { ObjectId, startSession } from 'mongoose';
-import DuctingReport from './ductingReport.model';
+import PostPourInspectionReport from './postPourInspectionReport.model';
 import { AppError } from '../../classes/appError';
-import { TDuctingReport } from './ductingReport.interface';
-import Project from '../project/project.model'
+import { TPostPourInspectionReport } from './postPourInspectionReport.interface';
+import Project from '../project/project.model';
 import checkProjectAuthorization from '../../utils/checkProjectAuthorization';
 import { userRoles } from '../../constants/global.constant';
 import { deleteSingleFileFromS3 } from '../../utils/deleteSingleFileFromS3';
 
-const addOrReplaceDuctingReport = async (userId: ObjectId, payload: TDuctingReport, files?: { client_approved_signature?: any; signed_on_completion_signature?: any }) => {
+const addOrReplacePostPourInspectionReport = async (userId: ObjectId, payload: TPostPourInspectionReport, files?: { client_approved_signature?: any; signed_on_completion_signature?: any }) => {
   const session = await startSession();
   session.startTransaction();
 
@@ -28,7 +28,7 @@ const addOrReplaceDuctingReport = async (userId: ObjectId, payload: TDuctingRepo
     }
 
     // Check if a report already exists for this project
-    const existingReport = await DuctingReport.findOne({ project: payload.project }).session(session);
+    const existingReport = await PostPourInspectionReport.findOne({ project: payload.project }).session(session);
     if (existingReport) {
       // Replace existing report
       payload.updated_by = userId;
@@ -39,7 +39,7 @@ const addOrReplaceDuctingReport = async (userId: ObjectId, payload: TDuctingRepo
     } else {
       // Create new report
       payload.updated_by = userId;
-      const report = await DuctingReport.create([payload], { session });
+      const report = await PostPourInspectionReport.create([payload], { session });
       await session.commitTransaction();
       return report[0];
     }
@@ -47,33 +47,33 @@ const addOrReplaceDuctingReport = async (userId: ObjectId, payload: TDuctingRepo
     await session.abortTransaction();
     await deleteSingleFileFromS3(files?.client_approved_signature[0]?.key);
     await deleteSingleFileFromS3(files?.signed_on_completion_signature[0]?.key);
-    throw new AppError(500, error.message || "Error processing ducting report!");
+    throw new AppError(500, error.message || "Error processing post pour inspection report!");
   } finally {
     session.endSession();
   }
 };
 
-const getProjectDuctingReport = async (projectId: string, userId: string) => {
+const getProjectPostPourInspectionReport = async (projectId: string, userId: string) => {
   const project = await Project.findById(projectId);
   if (!project) throw new AppError(400, "Invalid project ID!");
 
   // Use checkProjectAuthorization with updated roles
   checkProjectAuthorization(project, userId, [userRoles.companyAdmin, userRoles.employee]);
 
-  const report = await DuctingReport.findOne({ project: projectId });
+  const report = await PostPourInspectionReport.findOne({ project: projectId });
 
   return report;
 };
 
-const removeSignature = async (projectId: string, userId: ObjectId, payload: { signatureType: string }) => {
+const removeSignatureFromPostPourInspectionReport = async (projectId: string, userId: ObjectId, payload: { signatureType: string }) => {
   const project = await Project.findById(projectId);
   if (!project) throw new AppError(400, "Invalid project ID!");
 
   // Use checkProjectAuthorization with updated roles
   checkProjectAuthorization(project, userId.toString(), [userRoles.companyAdmin, userRoles.employee]);
 
-  const report = await DuctingReport.findOne({ project: projectId });
-  if (!report) throw new AppError(404, "No ducting report found for this project!");
+  const report = await PostPourInspectionReport.findOne({ project: projectId });
+  if (!report) throw new AppError(404, "No post pour inspection report found for this project!");
 
   if (payload.signatureType === "client_approved_signature" && report.client_approved_signature) {
     await deleteSingleFileFromS3(report.client_approved_signature!.split('.amazonaws.com/')[1]);
@@ -91,4 +91,4 @@ const removeSignature = async (projectId: string, userId: ObjectId, payload: { s
   return report;
 };
 
-export default { addOrReplaceDuctingReport, getProjectDuctingReport, removeSignature };
+export default { addOrReplacePostPourInspectionReport, getProjectPostPourInspectionReport, removeSignatureFromPostPourInspectionReport };

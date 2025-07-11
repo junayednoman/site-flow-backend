@@ -12,8 +12,8 @@ export type TExcavationReport = {
   compliance_check: boolean;
   check_for_underground_services: boolean;
   comment?: string;
-  signed_on_completion_signature?: string; // URL to the uploaded image
-  client_approved_signature?: string; // URL to the uploaded image
+  signed_on_completion_signature?: string;
+  client_approved_signature?: string;
   updated_by?: ObjectId;
-  project: ObjectId; // Added to align with unique constraint and existing logic
+  project: ObjectId;
 };

@@ -19,6 +19,7 @@ import siteDiaryRouters from "../modules/siteDiary/siteDiary.routes";
 import folderRoutes from "../modules/folder/folder.routes";
 import ductingReportRoutes from "../modules/ductingReport/ductingReport.routes";
 import excavationReportRoutes from "../modules/excavationReport/excavationReport.routes";
+import postPourInspectionReportRoutes from "../modules/postPourInspectionReport/postPourInspectionReport.routes";
 
 const router = Router();
 
@@ -43,6 +44,7 @@ const apiRoutes = [
   { path: "/folders", route: folderRoutes },
   { path: "/ducting-reports", route: ductingReportRoutes },
   { path: "/excavation-reports", route: excavationReportRoutes },
+  { path: "/post-pour-inspection-reports", route: postPourInspectionReportRoutes },
 ];
 
 apiRoutes.forEach((route) => {

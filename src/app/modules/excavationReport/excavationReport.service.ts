@@ -75,16 +75,16 @@ const removeSignature = async (projectId: string, userId: ObjectId, payload: { s
   const report = await ExcavationReport.findOne({ project: projectId });
   if (!report) throw new AppError(404, "No excavation report found for this project!");
 
-  if (payload.signatureType === "client_approved_signature") {
+  if (payload.signatureType === "client_approved_signature" && report.client_approved_signature) {
     await deleteSingleFileFromS3(report.client_approved_signature!.split('.amazonaws.com/')[1]);
     report.client_approved_signature = undefined;
     report.updated_by = userId;
-  } else if (payload.signatureType === "signed_on_completion_signature") {
+  } else if (payload.signatureType === "signed_on_completion_signature" && report.signed_on_completion_signature) {
     await deleteSingleFileFromS3(report.signed_on_completion_signature!.split('.amazonaws.com/')[1]);
     report.signed_on_completion_signature = undefined;
     report.updated_by = userId;
   } else {
-    throw new AppError(400, "Invalid signature type!");
+    throw new AppError(400, "Signature does not exist or invalid signature type!");
   }
 
   await report.save();
