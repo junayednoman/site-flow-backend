@@ -100,6 +100,8 @@ const getMyProjects = async (query: Record<string, any>, userRole: "employee" | 
         company_admin: 1,
         totalDayWork: { $size: "$dayWorks" },
         totalSiteDiary: { $size: "$siteDiary" },
+        createdAt: 1,
+        updatedAt: 1,
         dayWorkImages: {
           $reduce: {
             input: "$dayWorks",

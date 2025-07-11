@@ -5,7 +5,7 @@ import { Types } from 'mongoose';
 import Project from '../project/project.model';
 import checkProjectAuthorization from '../../utils/checkProjectAuthorization';
 import { userRoles } from '../../constants/global.constant';
-import { deleteSingleFileFromS3 } from '../../utils/deletes3Image';
+import { deleteSingleFileFromS3 } from '../../utils/deleteSingleFileFromS3';
 
 const createFolder = async (userId: string, payload: { name: string; project: string, added_by: string }) => {
   const project = await Project.findById(payload.project);

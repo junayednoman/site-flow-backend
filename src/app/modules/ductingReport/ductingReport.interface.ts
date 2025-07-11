@@ -1,0 +1,33 @@
+import { ObjectId } from 'mongoose';
+
+export type TDuctingReport = {
+  _id?: ObjectId;
+  project: ObjectId;
+  contract: string;
+  date: Date;
+  drawing_reference_incl_revision: string;
+  location_of_work: string;
+  completion_status: "completed" | "in-progress" | "not-completed";
+  sub_contractor?: string;
+  bed_type_and_thickness: boolean;
+  installation_pipe_type: string;
+  line: boolean;
+  level: boolean;
+  position: boolean;
+  gradient: boolean;
+  pop_up_dealed_off: boolean;
+  test_air_water_cctv_mandrill: boolean;
+  test_certificate_reference?: string;
+  pipe_haunching_surrounding: boolean;
+  pipe_type: string;
+  compaction: boolean;
+  backfill: boolean;
+  thickness: boolean;
+  type: boolean;
+  marker_tape: boolean;
+  install_by: string;
+  comment?: string;
+  client_approved_signature?: string;
+  signed_on_completion_signature?: string;
+  updated_by?: ObjectId;
+};

@@ -5,7 +5,7 @@ import Project from "../project/project.model";
 import Workforce from "../workforce/workforce.model";
 import Equipment from "../equipment/equipment.model";
 import mongoose, { ObjectId, startSession } from "mongoose";
-import { deleteSingleFileFromS3 } from "../../utils/deletes3Image";
+import { deleteSingleFileFromS3 } from "../../utils/deleteSingleFileFromS3";
 import checkProjectAuthorization from "../../utils/checkProjectAuthorization";
 import { userRoles } from "../../constants/global.constant";
 import AggregationBuilder from "../../classes/AggregationBuilder";

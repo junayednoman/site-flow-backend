@@ -1,4 +1,4 @@
-import { deleteSingleFileFromS3 } from "../../utils/deletes3Image";
+import { deleteSingleFileFromS3 } from "../../utils/deleteSingleFileFromS3";
 import { TAdmin } from "./admin.interface";
 import Admin from "./admin.model";
 

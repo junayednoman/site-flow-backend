@@ -17,6 +17,7 @@ import dayWorkRouters from "../modules/dayWork/dayWork.routes";
 import planRoutes from "../modules/plan/plan.routes";
 import siteDiaryRouters from "../modules/siteDiary/siteDiary.routes";
 import folderRoutes from "../modules/folder/folder.routes";
+import ductingReportRoutes from "../modules/ductingReport/ductingReport.routes";
 
 const router = Router();
 
@@ -39,6 +40,7 @@ const apiRoutes = [
   { path: "/site-diaries", route: siteDiaryRouters },
   { path: "/plans", route: planRoutes },
   { path: "/folders", route: folderRoutes },
+  { path: "/ducting-reports", route: ductingReportRoutes },
 ];
 
 apiRoutes.forEach((route) => {

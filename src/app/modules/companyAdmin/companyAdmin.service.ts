@@ -1,6 +1,6 @@
 import { startSession } from "mongoose";
 import { AppError } from "../../classes/appError";
-import { deleteSingleFileFromS3 } from "../../utils/deletes3Image";
+import { deleteSingleFileFromS3 } from "../../utils/deleteSingleFileFromS3";
 import Auth from "../auth/auth.model";
 import { TCompanyAdmin } from "./companyAdmin.interface";
 import bcrypt from "bcrypt";
