@@ -8,7 +8,8 @@ import cookieParser from "cookie-parser";
 const app = express();
 
 app.use(cors({
-  origin: ["http://192.168.10.159:5011", "http://localhost:5011"],
+  origin: ["http://10.10.10.17:3000", "http://localhost:3000"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true
 }));
 app.use(express.json());
@@ -17,7 +18,7 @@ app.use(cookieParser());
 app.use("/api/v1", router);
 
 app.get("/", (req, res) => {
-  res.json({ message: "🏗️ Hello from site-flow server!" });
+  res.send("🏗️ Hello from site-flow server!");
 });
 
 // handle global errors

@@ -3,11 +3,13 @@ import { AppError } from '../../classes/appError';
 import Project from '../project/project.model';
 import { TEquipment } from './equipment.interface';
 
-const createEquipment = async (payload: TEquipment) => {
-  const project = await Project.findById(payload.project);
-  if (!project) throw new AppError(400, 'Invalid project id!');
-  const equipment = await Equipment.create(payload);
-  return equipment;
+const createEquipment = async (payload: TEquipment[]) => {
+  payload.forEach(async (equipment: TEquipment) => {
+    const project = await Project.findById(equipment.project);
+    if (!project) throw new AppError(400, 'Invalid project id!');
+    const result = await Equipment.create(equipment);
+    return result;
+  })
 };
 
 const getEquipmentById = async (id: string) => {

@@ -2,7 +2,6 @@ import { Router } from "express";
 import authRouters from "../modules/auth/auth.routes";
 import adminRouters from "../modules/admin/admin.routes";
 import paymentRouters from "../modules/payment/payment.routes";
-import subscriptionPlanRouters from "../modules/subscriptionPlan/subscriptionPlan.routes";
 import subscriptionRouters from "../modules/subscription/subscription.routes";
 import { settingsRoutes } from "../modules/settings/settings.routes";
 import chatRouters from "../modules/chat/chat.routes";
@@ -20,19 +19,12 @@ import folderRoutes from "../modules/folder/folder.routes";
 import ductingReportRoutes from "../modules/ductingReport/ductingReport.routes";
 import excavationReportRoutes from "../modules/excavationReport/excavationReport.routes";
 import postPourInspectionReportRoutes from "../modules/postPourInspectionReport/postPourInspectionReport.routes";
+import subscriptionPlanRoutes from "../modules/subscriptionPlan/subscriptionPlan.routes";
 
 const router = Router();
 
 const apiRoutes = [
   { path: "/auth", route: authRouters },
-  { path: "/admins", route: adminRouters },
-  { path: "/payments", route: paymentRouters },
-  { path: "/subscription-plans", route: subscriptionPlanRouters },
-  { path: "/subscriptions", route: subscriptionRouters },
-  { path: "/settings", route: settingsRoutes },
-  { path: "/chats", route: chatRouters },
-  { path: "/messages", route: messageRouters },
-  { path: "/notifications", route: notificationRouters },
   { path: "/company-admins", route: companyAdminRouters },
   { path: "/projects", route: projectRoutes },
   { path: "/employees", route: employeeRouters },
@@ -45,6 +37,14 @@ const apiRoutes = [
   { path: "/ducting-reports", route: ductingReportRoutes },
   { path: "/excavation-reports", route: excavationReportRoutes },
   { path: "/post-pour-inspection-reports", route: postPourInspectionReportRoutes },
+  { path: "/subscription-plans", route: subscriptionPlanRoutes },
+  { path: "/subscriptions", route: subscriptionRouters },
+  { path: "/admins", route: adminRouters },
+  { path: "/payments", route: paymentRouters },
+  { path: "/settings", route: settingsRoutes },
+  { path: "/chats", route: chatRouters },
+  { path: "/messages", route: messageRouters },
+  { path: "/notifications", route: notificationRouters },
 ];
 
 apiRoutes.forEach((route) => {

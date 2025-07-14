@@ -1,43 +1,65 @@
-import { AppError } from "../../classes/appError";
-import { TSubscriptionPlan } from "./subscriptionPlan.interface";
-import SubscriptionPlan from "./subscriptionPlan.model"
+import { ObjectId, startSession } from 'mongoose';
+import SubscriptionPlan from './subscriptionPlan.model';
+import { AppError } from '../../classes/appError';
+import { TSubscriptionPlan } from './subscriptionPlan.interface';
 
-const createSubscriptionPlan = async (payload: TSubscriptionPlan) => {
-  const plan = await SubscriptionPlan.findOne({ price: payload.price, duration: payload.duration });
-  if (plan) throw new AppError(400, "A plan already exists with this price and duration!");
-  const result = await SubscriptionPlan.create(payload);
-  return result;
-}
+const createSubscriptionPlan = async (userId: ObjectId, payload: TSubscriptionPlan) => {
+  const existingPlan = await SubscriptionPlan.findOne({ name: payload.name });
+  if (existingPlan) throw new AppError(400, "Subscription plan with this name already exists!");
+
+  const plan = await SubscriptionPlan.create(payload);
+  return plan;
+};
+
+const updateSubscriptionPlan = async (planId: string, userId: ObjectId, payload: Partial<TSubscriptionPlan>) => {
+  const plan = await SubscriptionPlan.findById(planId);
+  if (!plan) throw new AppError(404, "Subscription plan not found!");
+
+  if (payload.name) {
+    const existingPlan = await SubscriptionPlan.findOne({ name: payload.name, _id: { $ne: planId } });
+    if (existingPlan) throw new AppError(400, "Subscription plan with this name already exists!");
+  }
+
+  Object.assign(plan, payload);
+  await plan.save();
+  return plan;
+};
 
 const getAllSubscriptionPlans = async () => {
-  const result = await SubscriptionPlan.find().sort({ createdAt: -1 });
-  return result;
-}
+  const plans = await SubscriptionPlan.find({ is_deleted: false });
+  return plans;
+};
 
-const getSingleSubscriptionPlan = async (id: string) => {
-  const result = await SubscriptionPlan.findById(id);
-  return result;
-}
+const getSingleSubscriptionPlan = async (planId: string) => {
+  const plan = await SubscriptionPlan.findOne({ _id: planId, is_deleted: false });
+  if (!plan) throw new AppError(404, "Subscription plan not found!");
+  return plan;
+};
 
-const updateSubscriptionPlan = async (id: string, payload: Partial<TSubscriptionPlan>) => {
-  const plan = await SubscriptionPlan.findById(id);
-  if (!plan) throw new AppError(404, "Plan not found!");
+const softDeleteSubscriptionPlan = async (planId: string) => {
+  const session = await startSession();
+  session.startTransaction();
 
-  const result = await SubscriptionPlan.findByIdAndUpdate(id, payload, { new: true });
-  return result;
-}
+  try {
+    const plan = await SubscriptionPlan.findById(planId).session(session);
+    if (!plan) throw new AppError(404, "Subscription plan not found!");
 
-const deleteSubscriptionPlan = async (id: string) => {
-  const plan = await SubscriptionPlan.findById(id);
-  if (!plan) throw new AppError(404, "Plan not found!");
-  const result = await SubscriptionPlan.findByIdAndDelete(id);
-  return result;
-}
+    //////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////
+    /// CHECK IF ANY SUBSCRIPTION IS ASSOCIATED WITH THIS PLAN ///
+    //////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////
 
-export const SubscriptionPlanServices = {
-  createSubscriptionPlan,
-  getAllSubscriptionPlans,
-  getSingleSubscriptionPlan,
-  updateSubscriptionPlan,
-  deleteSubscriptionPlan
-}
+    plan.is_deleted = true;
+    await plan.save({ session });
+    await session.commitTransaction();
+    return plan;
+  } catch (error: any) {
+    await session.abortTransaction();
+    throw new AppError(500, error.message || "Error soft deleting subscription plan!");
+  } finally {
+    session.endSession();
+  }
+};
+
+export default { createSubscriptionPlan, updateSubscriptionPlan, getAllSubscriptionPlans, getSingleSubscriptionPlan, softDeleteSubscriptionPlan };

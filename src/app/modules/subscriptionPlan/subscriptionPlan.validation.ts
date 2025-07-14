@@ -1,15 +1,11 @@
 import { z } from 'zod';
 
-export const subscriptionPlanValidationSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  price: z.number().min(0, "Price must be a positive number"),
-  duration: z.number({ invalid_type_error: "Duration must be provided as month in number" }).min(1, "Duration is required"),
-  description: z.string().min(1, "Description is required"),
+const subscriptionPlanBaseSchema = z.object({
+  name: z.string().min(1, "Name is required").trim(),
+  max_users: z.number().min(1, "Max users must be at least 1"),
+  price: z.number().min(0, "Price cannot be negative"),
+  billing_cycle: z.enum(['monthly', 'yearly'], { required_error: "Billing cycle is required" }),
 });
 
-export const updateSubscriptionPlanValidationSchema = z.object({
-  name: z.string().min(1, "Name is required").optional(),
-  price: z.number().min(0, "Price must be a positive number").optional(),
-  duration: z.number({ invalid_type_error: "Duration must be provided as month in number" }).optional(),
-  description: z.string().min(1, "Description is required").optional(),
-});
+export const createSubscriptionPlanValidationSchema = subscriptionPlanBaseSchema.strict();
+export const updateSubscriptionPlanValidationSchema = subscriptionPlanBaseSchema.partial().strict();

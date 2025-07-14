@@ -23,7 +23,7 @@ const loginUser = handleAsyncRequest(async (req, res) => {
   const cookieOptions: any = {
     httpOnly: true,
     secure: config.node_env === 'production', // Use secure in production
-    maxAge: payload.is_remember ? 30 * day : 3 * day,
+    maxAge: payload.is_remember ? 60 * day : 20 * day,
   };
 
   if (config.node_env === 'production') cookieOptions.sameSite = 'none';
@@ -38,8 +38,6 @@ const loginUser = handleAsyncRequest(async (req, res) => {
 
 const logOut = handleAsyncRequest(async (req, res) => {
   const refreshToken = req?.cookies?.refreshToken;
-  console.log('refreshToken', req.cookies);
-  // set refreshToken in cookie
   if (refreshToken) res.clearCookie('refreshToken');
 
   successResponse(res, {

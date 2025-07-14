@@ -1,16 +1,42 @@
 import { Router } from "express";
-import authVerify from "../../middlewares/authVerify";
-import { subscriptionPlanControllers } from "./subscriptionPlan.controller";
-import { handleZodValidation } from "../../middlewares/handleZodValidation";
-import { subscriptionPlanValidationSchema, updateSubscriptionPlanValidationSchema } from "./subscriptionPlan.validation";
 import { userRoles } from "../../constants/global.constant";
+import authVerify from "../../middlewares/authVerify";
+import { handleZodValidation } from "../../middlewares/handleZodValidation";
+import { createSubscriptionPlanValidationSchema, updateSubscriptionPlanValidationSchema } from "./subscriptionPlan.validation";
+import subscriptionPlanController from "./subscriptionPlan.controller";
 
-const subscriptionPlanRouters = Router();
+const subscriptionPlanRoutes = Router();
 
-subscriptionPlanRouters.post("/", authVerify([userRoles.admin]), handleZodValidation(subscriptionPlanValidationSchema), subscriptionPlanControllers.createSubscriptionPlan);
-subscriptionPlanRouters.get("/", authVerify([userRoles.admin, userRoles.companyAdmin]), subscriptionPlanControllers.getAllSubscriptionPlans);
-subscriptionPlanRouters.get("/:id", authVerify([userRoles.admin, userRoles.companyAdmin]), subscriptionPlanControllers.getSingleSubscriptionPlan);
-subscriptionPlanRouters.put("/:id", authVerify([userRoles.admin]), handleZodValidation(updateSubscriptionPlanValidationSchema), subscriptionPlanControllers.updateSubscriptionPlan);
-subscriptionPlanRouters.delete("/:id", authVerify([userRoles.admin]), subscriptionPlanControllers.deleteSubscriptionPlan);
+subscriptionPlanRoutes.post(
+  "/",
+  authVerify([userRoles.admin]),
+  handleZodValidation(createSubscriptionPlanValidationSchema),
+  subscriptionPlanController.createSubscriptionPlan
+);
 
-export default subscriptionPlanRouters;
+subscriptionPlanRoutes.put(
+  "/:planId",
+  authVerify([userRoles.admin]),
+  handleZodValidation(updateSubscriptionPlanValidationSchema),
+  subscriptionPlanController.updateSubscriptionPlan
+);
+
+subscriptionPlanRoutes.get(
+  "/",
+  authVerify([userRoles.companyAdmin, userRoles.employee, userRoles.admin]),
+  subscriptionPlanController.getAllSubscriptionPlans
+);
+
+subscriptionPlanRoutes.get(
+  "/:planId",
+  authVerify([userRoles.companyAdmin, userRoles.employee, userRoles.admin]),
+  subscriptionPlanController.getSingleSubscriptionPlan
+);
+
+subscriptionPlanRoutes.delete(
+  "/:planId",
+  authVerify([userRoles.admin]),
+  subscriptionPlanController.softDeleteSubscriptionPlan
+);
+
+export default subscriptionPlanRoutes;

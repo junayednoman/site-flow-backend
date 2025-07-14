@@ -36,7 +36,7 @@ const loginUser = async (payload: { email: string; password: string, is_remember
   });
 
   const refreshToken = jsonwebtoken.sign(jwtPayload, config.jwt_refresh_secret as string, {
-    expiresIn: payload?.is_remember ? "30d" : "3d",
+    expiresIn: payload?.is_remember ? "60d" : "20d",
   });
   return { accessToken, refreshToken, role: user.role };
 };

@@ -1,6 +1,10 @@
+import { ObjectId } from 'mongoose';
+
 export type TSubscriptionPlan = {
+  _id?: ObjectId;
   name: string;
+  max_users: number;
   price: number;
-  duration: number;
-  description: string;
+  billing_cycle: string;
+  is_deleted?: boolean;
 };

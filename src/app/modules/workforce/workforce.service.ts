@@ -3,11 +3,13 @@ import { AppError } from '../../classes/appError';
 import { TWorkforce } from './workforce.interface';
 import Project from '../project/project.model';
 
-const createWorkforce = async (payload: TWorkforce) => {
-  const project = await Project.findById(payload.project);
-  if (!project) throw new AppError(400, 'Invalid project id!');
-  const workforce = await Workforce.create(payload);
-  return workforce;
+const createWorkforce = async (payload: TWorkforce[]) => {
+  payload.forEach(async (workforce: TWorkforce) => {
+    const project = await Project.findById(workforce.project);
+    if (!project) throw new AppError(400, 'Invalid project id!');
+    const result = await Workforce.create(workforce);
+    return result;
+  })
 };
 
 const getWorkforceById = async (id: string) => {

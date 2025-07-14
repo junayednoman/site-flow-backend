@@ -23,7 +23,7 @@ authRouters.post(
   AuthController.loginUser
 );
 authRouters.post(
-  "/log-out",
+  "/logout",
   authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.employee,]),
   AuthController.logOut
 );
@@ -49,7 +49,7 @@ authRouters.post(
   AuthController.changePassword
 );
 authRouters.get(
-  "/get-access-token",
+  "/refresh-token",
   AuthController.getNewAccessToken
 );
 authRouters.patch(
