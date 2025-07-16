@@ -6,7 +6,8 @@ const subscriptionSchema = new Schema<TSubscription>({
   plan: { type: Schema.Types.ObjectId, ref: 'SubscriptionPlan', required: true },
   start_date: { type: Date, required: true },
   end_date: { type: Date, required: true },
-  status: { type: String, enum: ['active', 'canceled', 'expired'], default: 'active' },
+  stripe_subscription_id: { type: String, required: true },
+  status: { type: String, enum: ['pending', 'active', 'canceled', 'expired'], default: 'active' },
 }, {
   timestamps: true
 })

@@ -1,5 +1,5 @@
 import { z } from 'zod';
 
-export const SubscriptionSchema = z.object({
-  plan: z.string().min(1, "Plan is required"),
+export const subscriptionCreateSchema = z.object({
+  plan_id: z.string().min(1, "Plan id is required"),
 });

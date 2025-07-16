@@ -2,6 +2,35 @@ import handleAsyncRequest from "../../utils/handleAsyncRequest";
 import { successResponse } from "../../utils/successResponse";
 import subscriptionServices from "./subscription.service";
 
+const createSubscriptionCheckoutSession = handleAsyncRequest(async (req: any, res) => {
+  const planId = req.body.plan_id;
+  const userId = req.user.id
+  const customer_email = req.user.email
+  const result = await subscriptionServices.createSubscriptionCheckoutSession(userId, customer_email, planId);
+  successResponse(res, {
+    message: "Checkout session created successfully!",
+    data: result
+  });
+})
+
+const subscriptionSuccess = handleAsyncRequest(async (req: any, res) => {
+  const session_id = req.query.session_id;
+  const transaction_id = req.query.transaction_id;
+  const userId = req.query.user_id
+  const result = await subscriptionServices.subscriptionSuccess(session_id, transaction_id, userId);
+  successResponse(res, {
+    message: "Payment successful!",
+    data: result
+  });
+})
+
+const subscriptionCancel = handleAsyncRequest(async (req: any) => {
+  const transaction_id = req.query.transaction_id;
+  const userId = req.query.user_id;
+
+  await subscriptionServices.subscriptionCancel(transaction_id, userId)
+})
+
 const getAllSubscriptions = handleAsyncRequest(async (req, res) => {
   const query = req.query;
   const result = await subscriptionServices.getAllSubscriptions(query);
@@ -31,9 +60,12 @@ const getMySubscription = handleAsyncRequest(async (req: any, res) => {
 
 
 const subscriptionControllers = {
+  createSubscriptionCheckoutSession,
+  subscriptionSuccess,
+  subscriptionCancel,
   getAllSubscriptions,
   getSingleSubscription,
-  getMySubscription
+  getMySubscription,
 };
 
 export default subscriptionControllers;

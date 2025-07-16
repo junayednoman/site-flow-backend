@@ -4,7 +4,7 @@ export interface TPayment {
   user: ObjectId;
   amount: number;
   transaction_id: string;
-  status: string;
+  status: "pending" | "paid" | "failed";
   currency: string;
-  purpose: "subscription" | "star";
+  purpose: "subscription";
 }

@@ -5,5 +5,6 @@ export type TSubscription = {
   plan: ObjectId;
   start_date: Date;
   end_date: Date;
-  status: 'active' | 'canceled' | 'expired';
+  stripe_subscription_id: string;
+  status: 'pending' | 'active' | 'canceled' | 'expired';
 };

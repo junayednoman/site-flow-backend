@@ -7,5 +7,6 @@ export type TSubscriptionPlan = {
   price: number;
   interval: "year" | "month";
   stripe_product_id: string;
+  stripe_price_id: string;
   is_deleted?: boolean;
 };
