@@ -7,7 +7,8 @@ const companyAdminSchema = new Schema<TCompanyAdmin>({
   email: { type: String, required: true, unique: true },
   image: { type: String, required: false },
   logo: { type: String, required: false },
-  phone: { type: String, default: null }
+  phone: { type: String, default: null },
+  location: { type: String, default: null },
 }, {
   timestamps: true
 })

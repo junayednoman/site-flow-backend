@@ -32,11 +32,4 @@ subscriptionPlanRoutes.get(
   authVerify([userRoles.companyAdmin, userRoles.employee, userRoles.admin]),
   subscriptionPlanController.getSingleSubscriptionPlan
 );
-
-subscriptionPlanRoutes.delete(
-  "/:planId",
-  authVerify([userRoles.admin]),
-  subscriptionPlanController.softDeleteSubscriptionPlan
-);
-
 export default subscriptionPlanRoutes;

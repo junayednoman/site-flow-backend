@@ -1,17 +1,52 @@
-import { ObjectId, startSession } from 'mongoose';
+
 import SubscriptionPlan from './subscriptionPlan.model';
 import { AppError } from '../../classes/appError';
 import { TSubscriptionPlan } from './subscriptionPlan.interface';
+import Stripe from 'stripe';
+import config from '../../config';
+import mongoose from 'mongoose';
 
-const createSubscriptionPlan = async (userId: ObjectId, payload: TSubscriptionPlan) => {
+// Initialize the Stripe client
+const stripe = new Stripe(config.stripe_secret_key as string, {
+  apiVersion: "2025-02-24.acacia",
+});
+
+const createSubscriptionPlan = async (payload: TSubscriptionPlan) => {
   const existingPlan = await SubscriptionPlan.findOne({ name: payload.name });
   if (existingPlan) throw new AppError(400, "Subscription plan with this name already exists!");
 
-  const plan = await SubscriptionPlan.create(payload);
-  return plan;
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+
+    const plan = await SubscriptionPlan.create([payload], { session });
+
+    if (plan) {
+      const stripeProduct = await stripe.products.create({
+        name: payload.name,
+        default_price_data: {
+          unit_amount: payload.price * 100,
+          currency: 'usd',
+          recurring: {
+            interval: payload.interval
+          }
+        },
+      })
+
+      await SubscriptionPlan.findByIdAndUpdate(plan[0]?._id, { stripe_product_id: stripeProduct.id }, { session });
+    }
+
+    await session.commitTransaction();
+    return plan;
+  } catch (error: any) {
+    await session.abortTransaction();
+    throw new AppError(400, error?.message || "Failed to create subscription plan!");
+  } finally {
+    session.endSession();
+  }
 };
 
-const updateSubscriptionPlan = async (planId: string, userId: ObjectId, payload: Partial<TSubscriptionPlan>) => {
+const updateSubscriptionPlan = async (planId: string, payload: Partial<TSubscriptionPlan>) => {
   const plan = await SubscriptionPlan.findById(planId);
   if (!plan) throw new AppError(404, "Subscription plan not found!");
 
@@ -22,6 +57,11 @@ const updateSubscriptionPlan = async (planId: string, userId: ObjectId, payload:
 
   Object.assign(plan, payload);
   await plan.save();
+  const stripePayload = {} as any;
+  if (payload.name) stripePayload["name"] = payload.name;
+  if (payload.price) stripePayload["default_price_data"]["unit_amount"] = payload.price * 100;
+  if (payload.interval) stripePayload["default_price_data"]["recurring"]["interval"] = payload.interval;
+  await stripe.products.update(plan.stripe_product_id, stripePayload)
   return plan;
 };
 
@@ -36,30 +76,5 @@ const getSingleSubscriptionPlan = async (planId: string) => {
   return plan;
 };
 
-const softDeleteSubscriptionPlan = async (planId: string) => {
-  const session = await startSession();
-  session.startTransaction();
 
-  try {
-    const plan = await SubscriptionPlan.findById(planId).session(session);
-    if (!plan) throw new AppError(404, "Subscription plan not found!");
-
-    //////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////
-    /// CHECK IF ANY SUBSCRIPTION IS ASSOCIATED WITH THIS PLAN ///
-    //////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////
-
-    plan.is_deleted = true;
-    await plan.save({ session });
-    await session.commitTransaction();
-    return plan;
-  } catch (error: any) {
-    await session.abortTransaction();
-    throw new AppError(500, error.message || "Error soft deleting subscription plan!");
-  } finally {
-    session.endSession();
-  }
-};
-
-export default { createSubscriptionPlan, updateSubscriptionPlan, getAllSubscriptionPlans, getSingleSubscriptionPlan, softDeleteSubscriptionPlan };
+export default { createSubscriptionPlan, updateSubscriptionPlan, getAllSubscriptionPlans, getSingleSubscriptionPlan };

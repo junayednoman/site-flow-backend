@@ -78,7 +78,7 @@ const signUp = async (payload: TCompanyAdmin & { password: string }) => {
 };
 
 const getCompanyAdminProfile = async (id: string) => {
-  const companyAdmin = await Auth.findById(id);
+  const companyAdmin = await Auth.findById(id).select("user user_type role").populate("user");
   return companyAdmin;
 }
 

@@ -5,4 +5,5 @@ export type TCompanyAdmin = {
   image?: string;
   logo?: string;
   phone?: string;
+  location?: string
 };
