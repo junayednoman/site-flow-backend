@@ -8,7 +8,7 @@ import { TSubscription } from "./subscription.interface";
 import mongoose, { ObjectId } from "mongoose";
 import { TPayment } from "../payment/payment.interface";
 import { generateTransactionId } from "../../utils/transactionIdGenerator";
-import Payment from "../payment/payment.model";
+import Payment from "../payment/payment.model"
 
 // Initialize the Stripe client
 const stripe = new Stripe(config.stripe_secret_key as string, {
@@ -135,6 +135,28 @@ const getMySubscription = async (id: string) => {
   return { ...result?.toObject(), auto_renewal_status };
 };
 
+const turnOnAutoRenewal = async (userId: string, stripeSubscriptionId: string) => {
+  const subscription = await Subscription.findOne({ stripe_subscription_id: stripeSubscriptionId, status: "active" });
+  if (!subscription) throw new AppError(400, "Subscription not found!")
+  if (userId !== subscription.user.toString()) throw new AppError(401, "Unauthorized")
+
+  const stripeSub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+  if (stripeSub.cancel_at_period_end) {
+    await stripe.subscriptions.update(stripeSubscriptionId, { cancel_at_period_end: false });
+  }
+}
+
+const turnOffAutoRenewal = async (userId: string, stripeSubscriptionId: string) => {
+  const subscription = await Subscription.findOne({ stripe_subscription_id: stripeSubscriptionId, status: "active" });
+  if (!subscription) throw new AppError(400, "Subscription not found!")
+  if (userId !== subscription.user.toString()) throw new AppError(401, "Unauthorized")
+
+  const stripeSub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+  if (!stripeSub.cancel_at_period_end) {
+    await stripe.subscriptions.update(stripeSubscriptionId, { cancel_at_period_end: true });
+  }
+}
+
 const subscriptionServices = {
   createSubscriptionCheckoutSession,
   subscriptionSuccess,
@@ -142,6 +164,8 @@ const subscriptionServices = {
   getAllSubscriptions,
   getSingleSubscription,
   getMySubscription,
+  turnOnAutoRenewal,
+  turnOffAutoRenewal
 };
 
 export default subscriptionServices;

@@ -4,8 +4,8 @@ import subscriptionServices from "./subscription.service";
 
 const createSubscriptionCheckoutSession = handleAsyncRequest(async (req: any, res) => {
   const planId = req.body.plan_id;
-  const userId = req.user.id
-  const customer_email = req.user.email
+  const userId = req.user.id;
+  const customer_email = req.user.email;
   const result = await subscriptionServices.createSubscriptionCheckoutSession(userId, customer_email, planId);
   successResponse(res, {
     message: "Checkout session created successfully!",
@@ -58,6 +58,25 @@ const getMySubscription = handleAsyncRequest(async (req: any, res) => {
   });
 });
 
+const turnOnAutoRenewal = handleAsyncRequest(async (req: any, res) => {
+  const id = req.params.stripeSubId;
+  const userId = req.user.id;
+  const result = await subscriptionServices.turnOnAutoRenewal(userId, id);
+  successResponse(res, {
+    message: "Auto-renewal turned on successfully!",
+    data: result
+  });
+});
+
+const turnOffAutoRenewal = handleAsyncRequest(async (req: any, res) => {
+  const id = req.params.stripeSubId;
+  const userId = req.user.id;
+  const result = await subscriptionServices.turnOffAutoRenewal(userId, id);
+  successResponse(res, {
+    message: "Auto-renewal turned off successfully!",
+    data: result
+  });
+});
 
 const subscriptionControllers = {
   createSubscriptionCheckoutSession,
@@ -66,6 +85,8 @@ const subscriptionControllers = {
   getAllSubscriptions,
   getSingleSubscription,
   getMySubscription,
+  turnOnAutoRenewal,
+  turnOffAutoRenewal
 };
 
 export default subscriptionControllers;

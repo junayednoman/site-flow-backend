@@ -13,5 +13,7 @@ subscriptionRouters.get("/cancel", subscriptionControllers.subscriptionCancel);
 subscriptionRouters.get('/', authVerify([userRoles.admin]), subscriptionControllers.getAllSubscriptions);
 subscriptionRouters.get('/my', authVerify([userRoles.companyAdmin]), subscriptionControllers.getMySubscription);
 subscriptionRouters.get('/:id', authVerify([userRoles.admin, userRoles.companyAdmin]), subscriptionControllers.getSingleSubscription);
+subscriptionRouters.patch('/turn-on-auto-renewal/:stripeSubId', authVerify([userRoles.companyAdmin]), subscriptionControllers.turnOnAutoRenewal);
+subscriptionRouters.patch('/turn-off-auto-renewal/:stripeSubId', authVerify([userRoles.companyAdmin]), subscriptionControllers.turnOffAutoRenewal);
 
 export default subscriptionRouters;
