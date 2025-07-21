@@ -8,6 +8,7 @@ import { Employee } from "./employee.model";
 import { userRoles } from "../../constants/global.constant";
 import fs from "fs";
 import { sendEmail } from "../../utils/sendEmail";
+import { deleteSingleFileFromS3 } from "../../utils/deleteSingleFileFromS3";
 
 const createEmployee = async (id: string, payload: TEmployee & { password: string }) => {
   payload.company_admin = id;
@@ -73,9 +74,17 @@ const getEmployeeProfile = async (email: string) => {
   return employee;
 }
 
-const updateEmployeeProfile = async (email: string, payload: TEmployee) => {
-  const employee = await Employee.findOneAndUpdate({ email }, payload, { new: true });
-  return employee;
+const updateEmployeeProfile = async (email: string, payload: TEmployee, file?: any) => {
+  if (file) payload.image = file.location;
+  const employee = await Employee.findOne({ email });
+  if (!employee) {
+    return await deleteSingleFileFromS3(file?.key);
+  }
+  const updatedEmployee = await Employee.findOneAndUpdate({ email }, payload, { new: true });
+  if (updatedEmployee) {
+    await deleteSingleFileFromS3(employee?.image?.split(".com/")[1] as string);
+  }
+  return updatedEmployee;
 }
 
 const deleteEmployee = async (id: string) => {

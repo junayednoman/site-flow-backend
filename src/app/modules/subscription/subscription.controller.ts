@@ -14,13 +14,9 @@ const createSubscriptionCheckoutSession = handleAsyncRequest(async (req: any, re
 })
 
 const subscriptionSuccess = handleAsyncRequest(async (req: any, res) => {
-  const session_id = req.query.session_id;
-  const transaction_id = req.query.transaction_id;
-  const userId = req.query.user_id
-  const result = await subscriptionServices.subscriptionSuccess(session_id, transaction_id, userId);
+  // const result = await subscriptionServices.subscriptionSuccess(session_id, transaction_id, userId);
   successResponse(res, {
     message: "Payment successful!",
-    data: result
   });
 })
 
@@ -78,6 +74,15 @@ const turnOffAutoRenewal = handleAsyncRequest(async (req: any, res) => {
   });
 });
 
+const updateSubscription = handleAsyncRequest(async (req: any, res) => {
+  const { stripe_subscription_id, new_plan_id } = req.body;
+  const result = await subscriptionServices.updateSubscription(stripe_subscription_id, new_plan_id);
+  successResponse(res, {
+    message: "Subscription updated successfully!",
+    data: result
+  });
+});
+
 const subscriptionControllers = {
   createSubscriptionCheckoutSession,
   subscriptionSuccess,
@@ -86,7 +91,8 @@ const subscriptionControllers = {
   getSingleSubscription,
   getMySubscription,
   turnOnAutoRenewal,
-  turnOffAutoRenewal
+  turnOffAutoRenewal,
+  updateSubscription
 };
 
 export default subscriptionControllers;

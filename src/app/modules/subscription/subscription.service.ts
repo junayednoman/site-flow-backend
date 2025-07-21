@@ -6,7 +6,6 @@ import Subscription from "./subscription.model";
 import config from "../../config";
 import { TSubscription } from "./subscription.interface";
 import mongoose, { ObjectId } from "mongoose";
-import { TPayment } from "../payment/payment.interface";
 import { generateTransactionId } from "../../utils/transactionIdGenerator";
 import Payment from "../payment/payment.model"
 
@@ -30,32 +29,16 @@ const createSubscriptionCheckoutSession = async (userId: string, customer_email:
       },
     ],
     mode: "subscription",
-    success_url: `${config.origin}/subscriptions/success?session_id={CHECKOUT_SESSION_ID}&transaction_id=${transaction_id}&user_id=${userId}&plan=${planId}`,
+    success_url: `${config.origin}/subscriptions/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${config.origin}/subscriptions/cancel?transaction_id=${transaction_id}&user_id=${userId}`,
   })
 
   // create subscription and payment for the user
   if (checkoutSession.url) {
-    const now = new Date();
-    let endDate = now;
-    if (plan.interval === 'month') {
-      endDate = new Date(now.setMonth(now.getMonth() + 1));
-    } else if (plan.interval === 'year') {
-      endDate = new Date(now.setFullYear(now.getFullYear() + 1));
-    }
-
     const subscriptionPayload: TSubscription = {
       user: userId as unknown as ObjectId,
       plan: planId as unknown as ObjectId,
-      start_date: new Date(),
-      end_date: endDate,
-      status: "pending",
       stripe_subscription_id: checkoutSession.subscription as string
-    }
-    const paymentPayload: Partial<TPayment> = {
-      user: userId as unknown as ObjectId,
-      amount: plan.price,
-      transaction_id,
     }
 
     const session = await mongoose.startSession();
@@ -63,7 +46,6 @@ const createSubscriptionCheckoutSession = async (userId: string, customer_email:
       session.startTransaction();
 
       await Subscription.create([subscriptionPayload], { session });
-      await Payment.create([paymentPayload], { session });
 
       await session.commitTransaction();
     } catch (error: any) {
@@ -76,26 +58,26 @@ const createSubscriptionCheckoutSession = async (userId: string, customer_email:
   return { url: checkoutSession.url };
 }
 
-const subscriptionSuccess = async (sessionId: string, transactionId: string, userId: string) => {
-  const session = await stripe.checkout.sessions.retrieve(sessionId);
+// const subscriptionSuccess = async (sessionId: string, transactionId: string, userId: string) => {
+//   const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-  // update the subscription & payment status
-  if (session.payment_status === "paid") {
-    const session = await mongoose.startSession();
-    try {
-      session.startTransaction();
-      await Subscription.findOneAndUpdate({ user: userId, status: "pending" }, { status: "active" });
-      await Payment.findOneAndUpdate({ transaction_id: transactionId, status: "pending" }, { status: "paid" });
+//   // update the subscription & payment status
+//   if (session.payment_status === "paid") {
+//     const session = await mongoose.startSession();
+//     try {
+//       session.startTransaction();
+//       await Subscription.findOneAndUpdate({ user: userId, status: "pending" }, { status: "active" });
+//       await Payment.findOneAndUpdate({ transaction_id: transactionId, status: "pending" }, { status: "paid" });
 
-      await session.commitTransaction();
-    } catch (error: any) {
-      await session.abortTransaction();
-      throw new AppError(500, error.message || "Payment failed!");
-    } finally {
-      session.endSession();
-    }
-  }
-}
+//       await session.commitTransaction();
+//     } catch (error: any) {
+//       await session.abortTransaction();
+//       throw new AppError(500, error.message || "Payment failed!");
+//     } finally {
+//       session.endSession();
+//     }
+//   }
+// }
 
 const subscriptionCancel = async (transactionId: string, user: string) => {
   await Payment.findOneAndDelete({ transaction_id: transactionId, status: "pending" });
@@ -129,10 +111,10 @@ const getSingleSubscription = async (id: string) => {
 };
 
 const getMySubscription = async (id: string) => {
-  const result = await Subscription.findOne({ user: id, status: "active" }).populate("plan", "name price max_users interval");
+  const result = await Subscription.findOne({ user: id }).populate("plan", "name price max_users interval");
   const stripeSubscription = await stripe.subscriptions.retrieve(result!.stripe_subscription_id);
   const auto_renewal_status = stripeSubscription.cancel_at_period_end === false ? "on" : "off";
-  return { ...result?.toObject(), auto_renewal_status };
+  return { ...result?.toObject(), auto_renewal_status, status: stripeSubscription.status, current_period_end: stripeSubscription.current_period_end };
 };
 
 const turnOnAutoRenewal = async (userId: string, stripeSubscriptionId: string) => {
@@ -157,15 +139,31 @@ const turnOffAutoRenewal = async (userId: string, stripeSubscriptionId: string) 
   }
 }
 
+const updateSubscription = async (stripe_subscription_id: string, new_plan_id: string) => {
+  const plan = await SubscriptionPlan.findById(new_plan_id);
+  if (!plan) throw new AppError(400, "Invalid plan id!");
+  const stripeSubscription = await stripe.subscriptions.retrieve(stripe_subscription_id);
+  const subscriptionItemId = stripeSubscription.items.data[0].id;
+  await stripe.subscriptions.update(stripe_subscription_id, {
+    items: [
+      {
+        id: subscriptionItemId,
+        price: plan.stripe_price_id,
+      },
+    ],
+    proration_behavior: 'create_prorations',
+  });
+}
+
 const subscriptionServices = {
   createSubscriptionCheckoutSession,
-  subscriptionSuccess,
   subscriptionCancel,
   getAllSubscriptions,
   getSingleSubscription,
   getMySubscription,
   turnOnAutoRenewal,
-  turnOffAutoRenewal
+  turnOffAutoRenewal,
+  updateSubscription
 };
 
 export default subscriptionServices;

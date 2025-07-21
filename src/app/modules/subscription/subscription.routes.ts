@@ -3,7 +3,7 @@ import authVerify from "../../middlewares/authVerify";
 import subscriptionControllers from "./subscription.controller";
 import { userRoles } from "../../constants/global.constant";
 import { handleZodValidation } from "../../middlewares/handleZodValidation";
-import { subscriptionCreateSchema } from "./subscription.validation";
+import { subscriptionCreateSchema, updateSubscriptionValidationSchema } from "./subscription.validation";
 
 const subscriptionRouters = Router();
 
@@ -15,5 +15,6 @@ subscriptionRouters.get('/my', authVerify([userRoles.companyAdmin]), subscriptio
 subscriptionRouters.get('/:id', authVerify([userRoles.admin, userRoles.companyAdmin]), subscriptionControllers.getSingleSubscription);
 subscriptionRouters.patch('/turn-on-auto-renewal/:stripeSubId', authVerify([userRoles.companyAdmin]), subscriptionControllers.turnOnAutoRenewal);
 subscriptionRouters.patch('/turn-off-auto-renewal/:stripeSubId', authVerify([userRoles.companyAdmin]), subscriptionControllers.turnOffAutoRenewal);
+subscriptionRouters.patch("/update-subscription", authVerify([userRoles.companyAdmin]), handleZodValidation(updateSubscriptionValidationSchema), subscriptionControllers.updateSubscription);
 
 export default subscriptionRouters;

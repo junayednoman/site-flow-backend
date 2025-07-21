@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
+import { TEmployee } from './employee.interface';
 
-const EmployeeSchema = new mongoose.Schema({
+const EmployeeSchema = new mongoose.Schema<TEmployee>({
   type: {
     type: String,
     enum: ['supervisor', 'manager'],
@@ -14,6 +15,10 @@ const EmployeeSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+  },
+  image: {
+    type: String,
+    default: null,
   },
   email: {
     type: String,

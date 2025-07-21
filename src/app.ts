@@ -4,7 +4,7 @@ import router from "./app/routes";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import routeNotFound from "./app/middlewares/routeNotFound";
 import cookieParser from "cookie-parser";
-
+import stripeWebhookRouter from "./app/modules/stripeWebhook/stripeWebhook.routes";
 const app = express();
 
 app.use(cors({
@@ -12,6 +12,8 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true
 }));
+app.use('/api/v1/stripe', stripeWebhookRouter);
+
 app.use(express.json());
 // Use cookie-parser middleware
 app.use(cookieParser());

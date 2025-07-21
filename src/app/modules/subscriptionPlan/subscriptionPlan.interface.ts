@@ -5,7 +5,7 @@ export type TSubscriptionPlan = {
   name: string;
   max_users: number;
   price: number;
-  interval: "year" | "month";
+  interval: "year" | "month" | "day";
   stripe_product_id: string;
   stripe_price_id: string;
   is_deleted?: boolean;
