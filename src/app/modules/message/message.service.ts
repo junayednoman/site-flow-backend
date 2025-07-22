@@ -38,11 +38,12 @@ const getChatMessages = async (chatGroupId: string, query: Record<string, any>) 
   return { data: result, meta };
 };
 
-const updateMessage = async (messageId: string, senderId: string, content: string): Promise<TMessage> => {
+const updateMessage = async (messageId: string, senderId: string, content: string, file?: string): Promise<TMessage> => {
   const message = await Message.findOne({ _id: messageId, sender: senderId });
   if (!message) throw new AppError(404, "Message not found or you are not authorized to edit it!");
 
   message.content = content;
+  if (file) message.file = file;
   await message.save();
   return message;
 };
