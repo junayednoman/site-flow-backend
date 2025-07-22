@@ -56,7 +56,7 @@ authRouters.patch(
   "/block/:id",
   authVerify([userRoles.admin]),
   AuthController.blockUser
-);
+)
 
 
 export default authRouters;

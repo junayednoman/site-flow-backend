@@ -9,7 +9,7 @@ const subscriptionRouters = Router();
 
 subscriptionRouters.post("/create-subscription-checkout-session", authVerify([userRoles.companyAdmin]), handleZodValidation(subscriptionCreateSchema), subscriptionControllers.createSubscriptionCheckoutSession);
 subscriptionRouters.get("/success", subscriptionControllers.subscriptionSuccess);
-subscriptionRouters.get("/cancel", subscriptionControllers.subscriptionCancel);
+subscriptionRouters.get("/cancel", subscriptionControllers.subscriptionCreationFail);
 subscriptionRouters.get('/', authVerify([userRoles.admin]), subscriptionControllers.getAllSubscriptions);
 subscriptionRouters.get('/my', authVerify([userRoles.companyAdmin]), subscriptionControllers.getMySubscription);
 subscriptionRouters.get('/:id', authVerify([userRoles.admin, userRoles.companyAdmin]), subscriptionControllers.getSingleSubscription);

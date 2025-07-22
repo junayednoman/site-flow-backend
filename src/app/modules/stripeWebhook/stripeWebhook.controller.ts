@@ -14,16 +14,10 @@ const stripe = new Stripe(config.stripe_secret_key!, {
   apiVersion: "2025-02-24.acacia",
 });
 
-// Replace this endpoint secret with your endpoint's unique secret
-// If you are testing with the CLI, find the secret by running 'stripe listen'
-// If you are using an endpoint defined with the API or dashboard, look in your webhook settings
-// at https://dashboard.stripe.com/webhooks
 const endpointSecret = config.stripe_webhook_secret_key;
 
 const stripeWebhookHandler = async (request: Request, response: Response) => {
   let event = request.body;
-  // Only verify the event if you have an endpoint secret defined.
-  // Otherwise use the basic event deserialized with JSON.parse
   if (endpointSecret) {
     // Get the signature sent by Stripe
     const signature = request.headers['stripe-signature'];

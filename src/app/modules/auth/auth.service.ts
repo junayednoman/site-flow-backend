@@ -157,14 +157,14 @@ const resetForgottenPassword = async (payload: {
 };
 
 const changePassword = async (email: string, payload: {
-  oldPassword: string;
-  newPassword: string;
+  old_password: string;
+  new_password: string;
 }) => {
   const user = await isUserExist(email);
 
   // Compare the password
   const isPasswordMatch = await bcrypt.compare(
-    payload.oldPassword,
+    payload.old_password,
     user.password
   );
   if (!isPasswordMatch) {
@@ -177,7 +177,7 @@ const changePassword = async (email: string, payload: {
 
   // hash the new password and save the document
   const hashedPassword = await bcrypt.hash(
-    payload.newPassword,
+    payload.new_password,
     Number(config.salt_rounds)
   );
   await Auth.findByIdAndUpdate(user._id, { password: hashedPassword });
@@ -232,7 +232,7 @@ const AuthServices = {
   resetForgottenPassword,
   changePassword,
   getNewAccessToken,
-  blockUser
+  blockUser,
 };
 
 export default AuthServices;

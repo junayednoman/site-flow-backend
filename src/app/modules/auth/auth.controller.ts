@@ -111,7 +111,6 @@ const blockUser = handleAsyncRequest(async (req, res) => {
     data: result,
   });
 });
-
 const AuthController = {
   companyAdminSignUp,
   loginUser,

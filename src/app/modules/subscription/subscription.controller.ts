@@ -20,11 +20,11 @@ const subscriptionSuccess = handleAsyncRequest(async (req: any, res) => {
   });
 })
 
-const subscriptionCancel = handleAsyncRequest(async (req: any) => {
+const subscriptionCreationFail = handleAsyncRequest(async (req: any) => {
   const transaction_id = req.query.transaction_id;
   const userId = req.query.user_id;
 
-  await subscriptionServices.subscriptionCancel(transaction_id, userId)
+  await subscriptionServices.subscriptionCreationFail(transaction_id, userId)
 })
 
 const getAllSubscriptions = handleAsyncRequest(async (req, res) => {
@@ -86,7 +86,7 @@ const updateSubscription = handleAsyncRequest(async (req: any, res) => {
 const subscriptionControllers = {
   createSubscriptionCheckoutSession,
   subscriptionSuccess,
-  subscriptionCancel,
+  subscriptionCreationFail,
   getAllSubscriptions,
   getSingleSubscription,
   getMySubscription,

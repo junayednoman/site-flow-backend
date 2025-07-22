@@ -4,12 +4,16 @@ import { TWorkforce } from './workforce.interface';
 import Project from '../project/project.model';
 
 const createWorkforce = async (payload: TWorkforce[]) => {
-  payload.forEach(async (workforce: TWorkforce) => {
+  for (const workforce of payload) {
     const project = await Project.findById(workforce.project);
     if (!project) throw new AppError(400, 'Invalid project id!');
-    const result = await Workforce.create(workforce);
-    return result;
-  })
+
+    const existing = await Workforce.findOne({ project: workforce.project, name: workforce.name });
+    if (existing) throw new AppError(400, 'Workforce already exists!');
+
+    await Workforce.create(workforce);
+  }
+
 };
 
 const getWorkforceById = async (id: string) => {

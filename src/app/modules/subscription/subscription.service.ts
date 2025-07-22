@@ -6,8 +6,6 @@ import Subscription from "./subscription.model";
 import config from "../../config";
 import { TSubscription } from "./subscription.interface";
 import mongoose, { ObjectId } from "mongoose";
-import { generateTransactionId } from "../../utils/transactionIdGenerator";
-import Payment from "../payment/payment.model"
 
 // Initialize the Stripe client
 const stripe = new Stripe(config.stripe_secret_key as string, {
@@ -18,7 +16,6 @@ const createSubscriptionCheckoutSession = async (userId: string, customer_email:
   const plan = await SubscriptionPlan.findById(planId)
   if (!plan) throw new AppError(400, "Invalid plan id!");
 
-  const transaction_id = generateTransactionId()
   const checkoutSession = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     customer_email,
@@ -30,7 +27,7 @@ const createSubscriptionCheckoutSession = async (userId: string, customer_email:
     ],
     mode: "subscription",
     success_url: `${config.origin}/subscriptions/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${config.origin}/subscriptions/cancel?transaction_id=${transaction_id}&user_id=${userId}`,
+    cancel_url: `${config.origin}/subscriptions/cancel`,
   })
 
   // create subscription and payment for the user
@@ -79,9 +76,7 @@ const createSubscriptionCheckoutSession = async (userId: string, customer_email:
 //   }
 // }
 
-const subscriptionCancel = async (transactionId: string, user: string) => {
-  await Payment.findOneAndDelete({ transaction_id: transactionId, status: "pending" });
-  await Subscription.findOneAndDelete({ user, status: "pending" });
+const subscriptionCreationFail = async () => {
   throw new AppError(400, "Payment failed!");
 }
 
@@ -157,7 +152,7 @@ const updateSubscription = async (stripe_subscription_id: string, new_plan_id: s
 
 const subscriptionServices = {
   createSubscriptionCheckoutSession,
-  subscriptionCancel,
+  subscriptionCreationFail,
   getAllSubscriptions,
   getSingleSubscription,
   getMySubscription,
