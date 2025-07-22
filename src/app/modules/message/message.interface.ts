@@ -6,7 +6,7 @@ export type TMessage = {
   sender: ObjectId;
   content: string;
   file: string;
-  seen: boolean;
+  seen_by: ObjectId[];
   createdAt?: Date;
   updatedAt?: Date;
 };

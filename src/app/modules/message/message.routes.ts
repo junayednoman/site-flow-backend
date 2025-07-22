@@ -27,6 +27,12 @@ messageRoutes.put(
   messageController.updateMessage
 );
 
+messageRoutes.patch(
+  "/:chatGroupId/seen-all",
+  authVerify([userRoles.companyAdmin, userRoles.employee]),
+  messageController.seenAllMessages
+);
+
 messageRoutes.delete(
   "/:messageId",
   authVerify([userRoles.companyAdmin, userRoles.employee]),

@@ -22,7 +22,6 @@ const getChatMessages = handleAsyncRequest(async (req: any, res) => {
   successResponse(res, {
     message: "Messages retrieved successfully!",
     data: result,
-    status: 200,
   });
 });
 
@@ -34,7 +33,6 @@ const updateMessage = handleAsyncRequest(async (req: any, res) => {
   successResponse(res, {
     message: "Message updated successfully!",
     data: result,
-    status: 200,
   });
 });
 
@@ -44,7 +42,16 @@ const deleteMessage = handleAsyncRequest(async (req: any, res) => {
   const result = await messageService.deleteMessage(messageId, senderId);
   successResponse(res, {
     message: result.message,
-    status: 200,
+  });
+});
+
+const seenAllMessages = handleAsyncRequest(async (req: any, res) => {
+  const { chatGroupId } = req.params;
+  const userId = req.user.id;
+  const result = await messageService.seenAllMessages(chatGroupId, userId);
+  successResponse(res, {
+    message: "Messages seen successfully!",
+    data: result,
   });
 });
 
@@ -53,6 +60,7 @@ const messageController = {
   getChatMessages,
   updateMessage,
   deleteMessage,
+  seenAllMessages
 };
 
 export default messageController;

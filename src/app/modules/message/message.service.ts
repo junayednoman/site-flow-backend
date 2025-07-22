@@ -48,6 +48,12 @@ const updateMessage = async (messageId: string, senderId: string, content: strin
   return message;
 };
 
+const seenAllMessages = async (chatGroupId: string, userId: string) => {
+  const chatGroup = await ChatGroup.findById(chatGroupId);
+  if (!chatGroup) throw new AppError(404, "Chat group not found!");
+  return await Message.updateMany({ chat_group: chatGroupId, sender: { $ne: userId } }, { $push: { seen_by: userId } });
+}
+
 const deleteMessage = async (messageId: string, senderId: string): Promise<{ message: string }> => {
   const message = await Message.findOne({ _id: messageId, sender: senderId });
   if (!message) throw new AppError(404, "Message not found or you are not authorized to delete it!");
@@ -56,4 +62,4 @@ const deleteMessage = async (messageId: string, senderId: string): Promise<{ mes
   return { message: "Message deleted successfully!" };
 };
 
-export default { createMessage, getChatMessages, updateMessage, deleteMessage };
+export default { createMessage, getChatMessages, updateMessage, deleteMessage, seenAllMessages };

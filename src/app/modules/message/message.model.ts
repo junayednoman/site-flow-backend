@@ -6,7 +6,7 @@ const MessageSchema = new mongoose.Schema<TMessage>({
   sender: { type: mongoose.Schema.Types.ObjectId, ref: 'Auth', required: true },
   content: { type: String, required: true },
   file: { type: String },
-  seen: { type: Boolean, default: false },
+  seen_by: { type: [mongoose.Schema.Types.ObjectId], ref: 'Auth', default: [] },
 }, {
   timestamps: true,
 });
