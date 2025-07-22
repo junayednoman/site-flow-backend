@@ -1,34 +1,15 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose from 'mongoose';
 import { TMessage } from './message.interface';
 
-const messageSchema = new Schema<TMessage>({
-  sender: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Auth',
-    required: true,
-  },
-  receiver: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Auth',
-    required: true,
-  },
-  chat: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Chat',
-    required: true,
-  },
-  text: {
-    type: String,
-    required: true,
-  },
-  seen: {
-    type: Boolean,
-    default: false
-  }
+const MessageSchema = new mongoose.Schema<TMessage>({
+  chat_group: { type: mongoose.Schema.Types.ObjectId, ref: 'ChatGroup', required: true },
+  sender: { type: mongoose.Schema.Types.ObjectId, ref: 'Auth', required: true },
+  content: { type: String, required: true },
+  file: { type: String },
+  seen: { type: Boolean, default: false },
 }, {
-  timestamps: true
+  timestamps: true,
 });
 
-const Message = mongoose.model<TMessage>('Message', messageSchema);
-
+const Message = mongoose.model<TMessage>('Message', MessageSchema);
 export default Message;

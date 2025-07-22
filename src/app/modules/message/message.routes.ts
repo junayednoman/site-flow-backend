@@ -1,12 +1,36 @@
 import { Router } from "express";
-import authVerify from "../../middlewares/authVerify";
-import messageControllers from "./message.controller";
 import { userRoles } from "../../constants/global.constant";
+import authVerify from "../../middlewares/authVerify";
+import messageController from "./message.controller";
+import { handleZodValidation } from "../../middlewares/handleZodValidation";
+import { createMessageValidationSchema, updateMessageValidationSchema } from "./message.validation";
 
-const messageRouters = Router();
+const messageRoutes = Router();
 
-messageRouters.get("/:chatId", authVerify([userRoles.companyAdmin, userRoles.employee]), messageControllers.getMessages);
-messageRouters.put("/:id", authVerify([userRoles.companyAdmin, userRoles.employee]), messageControllers.updateMessage);
-messageRouters.delete("/:id", authVerify([userRoles.companyAdmin, userRoles.employee]), messageControllers.deleteMessage);
+messageRoutes.post(
+  "/:chatGroupId",
+  authVerify([userRoles.companyAdmin, userRoles.employee]),
+  handleZodValidation(createMessageValidationSchema),
+  messageController.createMessage
+);
 
-export default messageRouters;
+messageRoutes.get(
+  "/:chatGroupId",
+  authVerify([userRoles.companyAdmin, userRoles.employee]),
+  messageController.getChatMessages
+);
+
+messageRoutes.put(
+  "/:messageId",
+  authVerify([userRoles.companyAdmin, userRoles.employee]),
+  handleZodValidation(updateMessageValidationSchema),
+  messageController.updateMessage
+);
+
+messageRoutes.delete(
+  "/:messageId",
+  authVerify([userRoles.companyAdmin, userRoles.employee]),
+  messageController.deleteMessage
+);
+
+export default messageRoutes;

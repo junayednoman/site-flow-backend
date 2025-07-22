@@ -1,9 +1,12 @@
-import { ObjectId } from "mongoose"
+import { ObjectId } from 'mongoose';
 
 export type TMessage = {
+  _id?: ObjectId;
+  chat_group: ObjectId;
   sender: ObjectId;
-  receiver: ObjectId;
-  chat: ObjectId;
-  text: string;
+  content: string;
+  file: string;
   seen: boolean;
-}
+  createdAt?: Date;
+  updatedAt?: Date;
+};

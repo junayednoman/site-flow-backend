@@ -10,5 +10,5 @@ const settingsSchema = new Schema<TSettings>(
   { timestamps: true },
 )
 
-const SettingsModel = model<TSettings>('Settings', settingsSchema)
-export default SettingsModel
+const Settings = model<TSettings>('Settings', settingsSchema)
+export default Settings

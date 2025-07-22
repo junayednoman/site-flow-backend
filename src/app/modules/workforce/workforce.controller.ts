@@ -6,7 +6,7 @@ const createWorkforce = handleAsyncRequest(async (req, res) => {
   const payload = req.body;
   const result = await workforceService.createWorkforce(payload);
   successResponse(res, {
-    message: "Workforce created successfully!",
+    message: "Workforces created successfully!",
     data: result,
     status: 201,
   });

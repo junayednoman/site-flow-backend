@@ -5,7 +5,6 @@ import paymentRouters from "../modules/payment/payment.routes";
 import subscriptionRouters from "../modules/subscription/subscription.routes";
 import { settingsRoutes } from "../modules/settings/settings.routes";
 import chatRouters from "../modules/chat/chat.routes";
-import messageRouters from "../modules/message/message.routes";
 import notificationRouters from "../modules/notification/notification.routes";
 import companyAdminRouters from "../modules/companyAdmin/companyAdmin.routes";
 import projectRoutes from "../modules/project/project.routes";
@@ -20,6 +19,8 @@ import ductingReportRoutes from "../modules/ductingReport/ductingReport.routes";
 import excavationReportRoutes from "../modules/excavationReport/excavationReport.routes";
 import postPourInspectionReportRoutes from "../modules/postPourInspectionReport/postPourInspectionReport.routes";
 import subscriptionPlanRoutes from "../modules/subscriptionPlan/subscriptionPlan.routes";
+import chatGroupRoutes from "../modules/chatGroup/chatGroup.routes";
+import messageRoutes from "../modules/message/message.routes";
 
 const router = Router();
 
@@ -43,8 +44,9 @@ const apiRoutes = [
   { path: "/payments", route: paymentRouters },
   { path: "/settings", route: settingsRoutes },
   { path: "/chats", route: chatRouters },
-  { path: "/messages", route: messageRouters },
+  { path: "/messages", route: messageRoutes },
   { path: "/notifications", route: notificationRouters },
+  { path: "/chat-groups", route: chatGroupRoutes },
 ];
 
 apiRoutes.forEach((route) => {

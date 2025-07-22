@@ -1,40 +1,25 @@
-import mongoose, { ObjectId } from "mongoose";
-import { AppError } from "../../classes/appError";
-import QueryBuilder from "../../classes/queryBuilder";
-import Chat from "../chat/chat.model";
-import { TMessage } from "./message.interface";
-import Message from "./message.model";
+import Message from './message.model';
+import { AppError } from '../../classes/appError';
+import { TMessage } from './message.interface';
+import ChatGroup from '../chatGroup/chatGroup.model';
+import chatGroupService from '../chatGroup/chatGroup.service';
+import QueryBuilder from '../../classes/queryBuilder';
+import { ObjectId } from 'mongoose';
 
-const createMessage = async (payload: TMessage) => {
-  let chat = await Chat.findById(payload.chat);
-  if (!chat) {
-    chat = await Chat.create({ participants: [payload.sender, payload.receiver] });
-    payload.chat = chat._id as unknown as ObjectId;
-  }
+const createMessage = async (chatGroupId: string, senderId: string, content: string, file?: string): Promise<TMessage> => {
+  const chatGroup = await ChatGroup.findById(chatGroupId);
+  if (!chatGroup) throw new AppError(404, "Chat group not found!");
+  if (!chatGroup.participants.includes(senderId as unknown as ObjectId)) throw new AppError(403, "User is not a participant of this chat group!");
 
-  const session = await mongoose.startSession();
-  try {
-    session.startTransaction();
+  const message = await Message.create({ chat_group: chatGroupId, sender: senderId, content, file });
+  await chatGroupService.updateLastMessage(chatGroupId, message._id.toString());
+  return message;
+};
 
-    const message = await Message.create([payload], { session });
-    await Chat.findByIdAndUpdate(chat._id, { last_message: message[0]?._id }, { session });
-
-    await session.commitTransaction();
-    return message;
-  } catch (error: any) {
-    await session.abortTransaction();
-    throw new AppError(400, error?.message || "Failed to create message!");
-  } finally {
-    session.endSession();
-  }
-}
-
-const getMessages = async (chatId: string, query: Record<string, any>) => {
-  const searchableFields = [
-    "text"
-  ];
+const getChatMessages = async (chatGroupId: string, query: Record<string, any>) => {
+  const searchableFields = ['content'];
   const messageQuery = new QueryBuilder(
-    Message.find({ chat: chatId }),
+    Message.find({ chat_group: chatGroupId }),
     query
   )
     .search(searchableFields)
@@ -43,30 +28,31 @@ const getMessages = async (chatId: string, query: Record<string, any>) => {
     .paginate()
     .selectFields();
 
-  const meta = await messageQuery.countTotal();
-  const result = await messageQuery.queryModel.sort({ createdAt: 1 });
+  const meta: any = await messageQuery.countTotal();
+  const result: any = (await messageQuery.queryModel.populate([
+    {
+      path: "sender", select: "user_type user",
+      populate: { path: "user", select: "name type image" }
+    },
+  ]).lean()).reverse();
   return { data: result, meta };
 };
 
-const updateMessage = async (id: string, text: string) => {
-  const message = await Message.findById(id);
-  if (!message) throw new AppError(404, "Message not found!");
-  message.text = text;
-  const result = await message.save();
-  return result;
+const updateMessage = async (messageId: string, senderId: string, content: string): Promise<TMessage> => {
+  const message = await Message.findOne({ _id: messageId, sender: senderId });
+  if (!message) throw new AppError(404, "Message not found or you are not authorized to edit it!");
+
+  message.content = content;
+  await message.save();
+  return message;
 };
 
-const deleteMessage = async (id: string) => {
-  const message = await Message.findById(id);
-  if (!message) throw new AppError(404, "Message not found!");
-  const result = await Message.findByIdAndDelete(id);
-  return result;
-}
+const deleteMessage = async (messageId: string, senderId: string): Promise<{ message: string }> => {
+  const message = await Message.findOne({ _id: messageId, sender: senderId });
+  if (!message) throw new AppError(404, "Message not found or you are not authorized to delete it!");
 
-const messageServices = {
-  createMessage,
-  getMessages,
-  updateMessage,
-  deleteMessage
+  await message.deleteOne();
+  return { message: "Message deleted successfully!" };
 };
-export default messageServices;
+
+export default { createMessage, getChatMessages, updateMessage, deleteMessage };
