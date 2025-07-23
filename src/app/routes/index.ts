@@ -4,7 +4,6 @@ import adminRouters from "../modules/admin/admin.routes";
 import paymentRouters from "../modules/payment/payment.routes";
 import subscriptionRouters from "../modules/subscription/subscription.routes";
 import { settingsRoutes } from "../modules/settings/settings.routes";
-import chatRouters from "../modules/chat/chat.routes";
 import notificationRouters from "../modules/notification/notification.routes";
 import companyAdminRouters from "../modules/companyAdmin/companyAdmin.routes";
 import projectRoutes from "../modules/project/project.routes";
@@ -44,7 +43,6 @@ const apiRoutes = [
   { path: "/admins", route: adminRouters },
   { path: "/payments", route: paymentRouters },
   { path: "/settings", route: settingsRoutes },
-  { path: "/chats", route: chatRouters },
   { path: "/messages", route: messageRoutes },
   { path: "/notifications", route: notificationRouters },
   { path: "/chat-groups", route: chatGroupRoutes },

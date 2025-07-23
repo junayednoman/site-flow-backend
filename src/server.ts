@@ -3,6 +3,7 @@ import app from "./app";
 import config from "./app/config";
 import { Server as HttpServer } from "http";
 import createAdmin from "./app/utils/createAdmin";
+import initializeSocket from "./socket";
 // import initializeSocketIO from "./socket";
 
 let server: HttpServer;
@@ -15,7 +16,7 @@ async function main() {
     });
 
     const socketServer = new HttpServer();
-    // initializeSocketIO(socketServer);
+    initializeSocket(socketServer);
     socketServer.listen(Number(config.socket_port), () => {
       console.log('🔌 Socket server is running on port:', config.socket_port);
     });
