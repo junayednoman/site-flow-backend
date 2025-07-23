@@ -2,12 +2,12 @@ import mongoose from 'mongoose';
 import { TFolder, TFile } from './folder.interface';
 
 const FileSchema = new mongoose.Schema<TFile>({
-  name: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
   url: { type: String, required: true },
 });
 
 const FolderSchema = new mongoose.Schema<TFolder>({
-  name: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
   project: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
   files: [FileSchema],
   added_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Auth', required: true },

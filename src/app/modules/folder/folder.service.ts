@@ -13,6 +13,8 @@ const createFolder = async (userId: string, payload: { name: string; project: st
 
   checkProjectAuthorization(project, userId, [userRoles.companyAdmin, userRoles.employee]);
   payload.added_by = userId;
+  const existing = await Folder.findOne({ name: payload.name, project: payload.project });
+  if (existing) throw new AppError(400, "Folder already exists with the name!");
   const folder = await Folder.create(payload);
   return folder;
 }
@@ -32,7 +34,6 @@ const getFoldersByProjectId = async (userId: string, projectId: string) => {
       }
     }
   ])
-  if (!folders.length) throw new AppError(404, "No folders found for this project!");
   return folders;
 };
 
@@ -57,6 +58,11 @@ const addFile = async (folderId: string, payload: TFile, file: any) => {
   payload.url = file.location
   const folder = await Folder.findById(folderId);
   if (!folder) throw new AppError(404, "Folder not found!");
+
+  if (folder.files.some(file => file.name === payload.name)) {
+    await deleteSingleFileFromS3(file.key);
+    throw new AppError(400, "File already exists with the name!");
+  }
 
   folder.files.push(payload as TFile);
   await folder.save();
