@@ -5,7 +5,7 @@ import SubscriptionPlan from "../subscriptionPlan/subscriptionPlan.model";
 import Subscription from "./subscription.model";
 import config from "../../config";
 import { TSubscription } from "./subscription.interface";
-import mongoose, { ObjectId } from "mongoose";
+import { ObjectId } from "mongoose";
 
 // Initialize the Stripe client
 const stripe = new Stripe(config.stripe_secret_key as string, {
@@ -26,55 +26,28 @@ const createSubscriptionCheckoutSession = async (userId: string, customer_email:
       },
     ],
     mode: "subscription",
-    success_url: `${config.origin}/subscriptions/success?session_id={CHECKOUT_SESSION_ID}`,
+    success_url: `${config.origin}/subscriptions/success?session_id={CHECKOUT_SESSION_ID}&plan_id=${planId}&user_id=${userId}`,
     cancel_url: `${config.origin}/subscriptions/cancel`,
+    expand: ["subscription"]
   })
-
-  // create subscription and payment for the user
-  if (checkoutSession.url) {
-    const subscriptionPayload: TSubscription = {
-      user: userId as unknown as ObjectId,
-      plan: planId as unknown as ObjectId,
-      stripe_subscription_id: checkoutSession.subscription as string
-    }
-
-    const session = await mongoose.startSession();
-    try {
-      session.startTransaction();
-
-      await Subscription.create([subscriptionPayload], { session });
-
-      await session.commitTransaction();
-    } catch (error: any) {
-      await session.abortTransaction();
-      throw new AppError(500, error.message || "Error creating checkout session!");
-    } finally {
-      session.endSession();
-    }
-  }
   return { url: checkoutSession.url };
 }
 
-// const subscriptionSuccess = async (sessionId: string, transactionId: string, userId: string) => {
-//   const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-//   // update the subscription & payment status
-//   if (session.payment_status === "paid") {
-//     const session = await mongoose.startSession();
-//     try {
-//       session.startTransaction();
-//       await Subscription.findOneAndUpdate({ user: userId, status: "pending" }, { status: "active" });
-//       await Payment.findOneAndUpdate({ transaction_id: transactionId, status: "pending" }, { status: "paid" });
-
-//       await session.commitTransaction();
-//     } catch (error: any) {
-//       await session.abortTransaction();
-//       throw new AppError(500, error.message || "Payment failed!");
-//     } finally {
-//       session.endSession();
-//     }
-//   }
-// }
+const subscriptionSuccess = async (sessionId: string, planId: string, userId: string) => {
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  // update the subscription & payment status
+  if (session.payment_status === "paid") {
+    const existing = await Subscription.findOne({ stripe_subscription_id: session.subscription as string });
+    if (!existing) {
+      const subscriptionPayload: TSubscription = {
+        user: userId as unknown as ObjectId,
+        plan: planId as unknown as ObjectId,
+        stripe_subscription_id: session.subscription as string
+      }
+      await Subscription.create(subscriptionPayload);
+    }
+  }
+}
 
 const subscriptionCreationFail = async () => {
   throw new AppError(400, "Payment failed!");
@@ -158,7 +131,8 @@ const subscriptionServices = {
   getMySubscription,
   turnOnAutoRenewal,
   turnOffAutoRenewal,
-  updateSubscription
+  updateSubscription,
+  subscriptionSuccess
 };
 
 export default subscriptionServices;

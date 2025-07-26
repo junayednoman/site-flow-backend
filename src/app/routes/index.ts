@@ -21,6 +21,7 @@ import subscriptionPlanRoutes from "../modules/subscriptionPlan/subscriptionPlan
 import chatGroupRoutes from "../modules/chatGroup/chatGroup.routes";
 import messageRoutes from "../modules/message/message.routes";
 import { uploadFileRoutes } from "../modules/uploadFile/uploadFile.routes";
+import summaryRoutes from "../modules/summary/summary.routes";
 
 const router = Router();
 
@@ -47,6 +48,7 @@ const apiRoutes = [
   { path: "/notifications", route: notificationRouters },
   { path: "/chat-groups", route: chatGroupRoutes },
   { path: "/upload-files", route: uploadFileRoutes },
+  { path: "/summary", route: summaryRoutes },
 ];
 
 apiRoutes.forEach((route) => {

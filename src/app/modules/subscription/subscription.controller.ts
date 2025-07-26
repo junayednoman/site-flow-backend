@@ -14,17 +14,16 @@ const createSubscriptionCheckoutSession = handleAsyncRequest(async (req: any, re
 })
 
 const subscriptionSuccess = handleAsyncRequest(async (req: any, res) => {
-  // const result = await subscriptionServices.subscriptionSuccess(session_id, transaction_id, userId);
+  const { session_id, plan_id, user_id } = req.query;
+  await subscriptionServices.subscriptionSuccess(session_id, plan_id, user_id);
   successResponse(res, {
     message: "Payment successful!",
   });
 })
 
-const subscriptionCreationFail = handleAsyncRequest(async (req: any) => {
-  const transaction_id = req.query.transaction_id;
-  const userId = req.query.user_id;
-
-  await subscriptionServices.subscriptionCreationFail(transaction_id, userId)
+// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+const subscriptionCreationFail = handleAsyncRequest(async (req, res) => {
+  await subscriptionServices.subscriptionCreationFail()
 })
 
 const getAllSubscriptions = handleAsyncRequest(async (req, res) => {

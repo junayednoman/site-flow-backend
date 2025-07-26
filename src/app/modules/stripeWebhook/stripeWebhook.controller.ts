@@ -44,16 +44,22 @@ const stripeWebhookHandler = async (request: Request, response: Response) => {
       break;
 
     case 'invoice.payment_succeeded': {
-      const invoice = event.data.object;
-      const amountPaid = invoice.amount_paid / 100;
-      const transaction_id = generateTransactionId()
-      const user = await Auth.findOne({ email: invoice.customer_email });
-      const paymentPayload: Partial<TPayment> = {
-        user: user?._id as unknown as ObjectId,
-        amount: amountPaid,
-        transaction_id,
+      console.log('invoice.payment_succeeded event received');
+      try {
+        const invoice = event.data.object;
+        const amountPaid = invoice.amount_paid / 100;
+        const transaction_id = generateTransactionId()
+        const user = await Auth.findOne({ email: invoice.customer_email });
+        const paymentPayload: Partial<TPayment> = {
+          user: user?._id as unknown as ObjectId,
+          amount: amountPaid,
+          transaction_id,
+          status: "paid"
+        }
+        await Payment.create(paymentPayload);
+      } catch (error: any) {
+        console.log('error', error.message || "Something went wrong");
       }
-      await Payment.create(paymentPayload);
     }
       break;
 
