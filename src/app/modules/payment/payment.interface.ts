@@ -6,5 +6,4 @@ export interface TPayment {
   transaction_id: string;
   status: "pending" | "paid" | "failed";
   currency: string;
-  purpose: "subscription";
 }

@@ -28,7 +28,7 @@ const loginUser = handleAsyncRequest(async (req, res) => {
 
   if (config.node_env === 'production') cookieOptions.sameSite = 'none';
 
-  res.cookie('refreshToken', refreshToken, cookieOptions);
+  res.cookie('constructionRefreshToken', refreshToken, cookieOptions);
 
   successResponse(res, {
     message: "User logged in successfully!",
@@ -38,7 +38,7 @@ const loginUser = handleAsyncRequest(async (req, res) => {
 
 const logOut = handleAsyncRequest(async (req, res) => {
   const refreshToken = req?.cookies?.refreshToken;
-  if (refreshToken) res.clearCookie('refreshToken');
+  if (refreshToken) res.clearCookie('constructionRefreshToken');
 
   successResponse(res, {
     message: "User logged out successfully!",
@@ -103,14 +103,17 @@ const getNewAccessToken = handleAsyncRequest(async (req, res) => {
   });
 });
 
-const blockUser = handleAsyncRequest(async (req, res) => {
+const changeUserStatus = handleAsyncRequest(async (req, res) => {
   const id = req.params.id;
-  const result = await AuthServices.blockUser(id);
+  const result = await AuthServices.changeUserStatus(id);
+  const refreshToken = req?.cookies?.refreshToken;
+  if (refreshToken) res.clearCookie('constructionRefreshToken');
   successResponse(res, {
     message: "User blocked successfully!",
     data: result,
   });
 });
+
 const AuthController = {
   companyAdminSignUp,
   loginUser,
@@ -120,7 +123,7 @@ const AuthController = {
   changePassword,
   getNewAccessToken,
   logOut,
-  blockUser
+  changeUserStatus
 };
 
 export default AuthController;

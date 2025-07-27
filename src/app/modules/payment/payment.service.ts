@@ -1,34 +1,76 @@
 import Payment from "./payment.model";
-import QueryBuilder from "../../classes/queryBuilder";
+import AggregationBuilder from "../../classes/AggregationBuilder";
 
 const getAllPayments = async (query: Record<string, any>) => {
-  const { startDate, endDate, ...restQuery } = query;
-  const reportQuery = {} as any;
-  if (startDate && endDate) {
-    reportQuery.createdAt = {
-      $gte: new Date(startDate),
-      $lte: new Date(endDate),
-    }
-  }
-  const searchableFields = [
-    "amount",
-    "purpose",
-    "status",
-    "transaction_id"
-  ];
-  const userQuery = new QueryBuilder(
-    Payment.find(reportQuery),
-    restQuery
-  )
-    .search(searchableFields)
+  // Helper to build $match for search
+  const buildSearchMatch = (term: string, baseFields: string[]) => {
+    if (!term) return {};
+    return {
+      $or: [
+        ...baseFields.map(f => ({ [f]: { $regex: term, $options: "i" } })),
+        { "companyAdmin.company_name": { $regex: term, $options: "i" } },
+        { "companyAdmin.email": { $regex: term, $options: "i" } },
+      ]
+    };
+  };
+
+  const searchableFields = ["amount", "transaction_id"];
+  const builder = new AggregationBuilder(Payment, [], query)
     .filter()
     .sort()
     .paginate()
     .selectFields();
 
-  const meta = await userQuery.countTotal();
-  const result = await userQuery.queryModel.populate("user", "name email image");
-  return { data: result, meta };
+  const pipeline = [
+    ...builder["pipeline"],
+
+    // Join with Auth
+    {
+      $lookup: {
+        from: "auths",
+        localField: "user",
+        foreignField: "_id",
+        as: "authData"
+      }
+    },
+    { $unwind: "$authData" },
+
+    // Join with CompanyAdmin
+    {
+      $lookup: {
+        from: "companyadmins", // collection name
+        localField: "authData.user",
+        foreignField: "_id",
+        as: "companyAdmin"
+      }
+    },
+    { $unwind: "$companyAdmin" },
+
+    // Apply search term if exists
+    {
+      $match: buildSearchMatch(query.searchTerm, searchableFields)
+    },
+
+    // Only keep necessary fields
+    {
+      $project: {
+        amount: 1,
+        transaction_id: 1,
+        createdAt: 1,
+        status: 1,
+        "authData.user_type": 1,
+        "companyAdmin.name": 1,
+        "companyAdmin.email": 1,
+        "companyAdmin.image": 1,
+        "companyAdmin.company_name": 1,
+      }
+    }
+  ];
+
+  const total = await Payment.countDocuments();
+  const data = await Payment.aggregate(pipeline);
+
+  return { data, meta: { total } }
 };
 
 const getSinglePayment = async (id: string) => {

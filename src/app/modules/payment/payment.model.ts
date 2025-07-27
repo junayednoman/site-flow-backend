@@ -7,7 +7,6 @@ const paymentSchema = new Schema<TPayment>({
   transaction_id: { type: String, required: true },
   status: { type: String, enum: ["pending", "paid", "failed"], required: true },
   currency: { type: String, required: true, default: "USD" },
-  purpose: { type: String, enum: ['subscription'], required: true, default: 'subscription' },
 }, {
   timestamps: true
 })

@@ -6,7 +6,7 @@ import { summaryController } from "./summary.controller";
 const router = Router();
 
 router.get("/stats", authVerify([userRoles.admin]), summaryController.getDashboardStats);
-router.get("/payment", authVerify([userRoles.admin]), summaryController.getPaymentSummary);
+router.get("/earning", authVerify([userRoles.admin]), summaryController.getPaymentSummary);
 
 const summaryRoutes = router;
 
