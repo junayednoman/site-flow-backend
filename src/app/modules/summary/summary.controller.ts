@@ -10,9 +10,9 @@ const getDashboardStats = handleAsyncRequest(async (req: any, res) => {
   });
 });
 
-const getEarningSummary = handleAsyncRequest(async (req: any, res) => {
+const getPaymentSummary = handleAsyncRequest(async (req: any, res) => {
   const year = req.query.year
-  const result = await summaryService.getEarningSummary(year);
+  const result = await summaryService.getPaymentSummary(year);
   successResponse(res, {
     message: "Payment summary retrieved successfully!",
     data: result,
@@ -21,5 +21,5 @@ const getEarningSummary = handleAsyncRequest(async (req: any, res) => {
 
 export const summaryController = {
   getDashboardStats,
-  getEarningSummary
+  getPaymentSummary
 };

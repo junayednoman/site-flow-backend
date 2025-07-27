@@ -89,9 +89,9 @@ const getAllCompanyAdmins = async (query: Record<string, any>) => {
     "gender",
     "age",
   ];
-  query.user_type = "CompanyAdmin"
+
   const userQuery = new QueryBuilder(
-    Auth.find(),
+    CompanyAdmin.find(),
     query
   )
     .search(searchableFields)
@@ -102,12 +102,6 @@ const getAllCompanyAdmins = async (query: Record<string, any>) => {
 
   const meta = await userQuery.countTotal();
   const result = await userQuery.queryModel
-    .select("-password") //
-    .populate({
-      path: "user",
-      select: "name email company_name image logo",
-    });
-
   return { data: result, meta };
 }
 
