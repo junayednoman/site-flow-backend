@@ -44,7 +44,7 @@ const getDashboardStats = async () => {
   return { totalUsers, totalEarnings: totalEarningData[0]?.totalEarnings, activeSubscriptions };
 };
 
-const getPaymentSummary = async (year: number) => {
+const getEarningSummary = async (year: number) => {
   const currentYear = new Date().getFullYear();
   const months = [
     "January", "February", "March", "April", "May", "June",
@@ -87,7 +87,7 @@ const getPaymentSummary = async (year: number) => {
 
 const summaryService = {
   getDashboardStats,
-  getPaymentSummary
+  getEarningSummary
 };
 
 export default summaryService;

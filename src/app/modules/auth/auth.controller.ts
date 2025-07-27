@@ -103,9 +103,9 @@ const getNewAccessToken = handleAsyncRequest(async (req, res) => {
   });
 });
 
-const blockUser = handleAsyncRequest(async (req, res) => {
+const changeUserStatus = handleAsyncRequest(async (req, res) => {
   const id = req.params.id;
-  const result = await AuthServices.blockUser(id);
+  const result = await AuthServices.changeUserStatus(id);
   successResponse(res, {
     message: "User blocked successfully!",
     data: result,
@@ -120,7 +120,7 @@ const AuthController = {
   changePassword,
   getNewAccessToken,
   logOut,
-  blockUser
+  changeUserStatus
 };
 
 export default AuthController;

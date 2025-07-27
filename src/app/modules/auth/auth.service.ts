@@ -218,11 +218,11 @@ const getNewAccessToken = async (token: string) => {
   return { accessToken }
 }
 
-const blockUser = async (id: string) => {
-  const user = await Auth.findOne({ _id: id, is_blocked: false });
+const changeUserStatus = async (id: string) => {
+  const user = await Auth.findById(id);
   if (!user) throw new AppError(400, "Invalid user id!");
 
-  return await Auth.findByIdAndUpdate(user._id, { is_blocked: true }, { new: true });
+  return await Auth.findByIdAndUpdate(user._id, { is_blocked: user.is_blocked ? false : true }, { new: true });
 };
 
 const AuthServices = {
@@ -232,7 +232,7 @@ const AuthServices = {
   resetForgottenPassword,
   changePassword,
   getNewAccessToken,
-  blockUser,
+  changeUserStatus,
 };
 
 export default AuthServices;

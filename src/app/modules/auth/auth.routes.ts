@@ -53,9 +53,9 @@ authRouters.get(
   AuthController.getNewAccessToken
 );
 authRouters.patch(
-  "/block/:id",
+  "/change-status/:id",
   authVerify([userRoles.admin]),
-  AuthController.blockUser
+  AuthController.changeUserStatus
 )
 
 
