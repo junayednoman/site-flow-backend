@@ -14,7 +14,7 @@ adminRouters.put(
   handleZodValidation(updateAdminProfileValidationSchema),
   adminControllers.updateAdminProfile
 );
-adminRouters.put(
+adminRouters.patch(
   "/image",
   authVerify([userRoles.admin]),
   upload.single("image"),
