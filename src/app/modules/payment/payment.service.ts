@@ -18,8 +18,8 @@ const getAllPayments = async (query: Record<string, any>) => {
   const builder = new AggregationBuilder(Payment, [], query)
     .filter()
     .sort()
-    .paginate()
-    .selectFields();
+    .selectFields()
+    .paginate();
 
   const pipeline = [
     ...builder["pipeline"],
@@ -67,10 +67,10 @@ const getAllPayments = async (query: Record<string, any>) => {
     }
   ];
 
-  const total = await Payment.countDocuments();
+  const builderTotal = await builder.countTotal();
   const data = await Payment.aggregate(pipeline);
 
-  return { data, meta: { total } }
+  return { data, meta: { total: builderTotal.total } }
 };
 
 const getSinglePayment = async (id: string) => {

@@ -109,7 +109,7 @@ const changeUserStatus = handleAsyncRequest(async (req, res) => {
   const refreshToken = req?.cookies?.refreshToken;
   if (refreshToken) res.clearCookie('constructionRefreshToken');
   successResponse(res, {
-    message: "User blocked successfully!",
+    message: "User account status changed successfully!",
     data: result,
   });
 });

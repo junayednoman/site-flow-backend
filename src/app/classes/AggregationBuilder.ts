@@ -2,11 +2,13 @@ class AggregationBuilder {
   private pipeline: any[];
   private query: Record<string, any>;
   private model: any; // Reference to the Mongoose model
+  private prePaginatePipeline: any[];
 
   constructor(model: any, initialPipeline: any[] = [], query: Record<string, any> = {}) {
     this.model = model;
     this.pipeline = [...initialPipeline];
     this.query = { ...query };
+    this.prePaginatePipeline = [];
   }
 
   search(searchableFields: string[]) {
@@ -70,7 +72,7 @@ class AggregationBuilder {
     const limit = Number(this.query.limit) || 10;
     const page = Number(this.query.page) || 1;
     const skip = (page - 1) * limit;
-
+    this.prePaginatePipeline = [...this.pipeline];
     this.pipeline.push({ $skip: skip });
     this.pipeline.push({ $limit: limit });
     return this;
@@ -95,7 +97,7 @@ class AggregationBuilder {
   }
 
   async countTotal() {
-    const totalPipeline = [...this.pipeline];
+    const totalPipeline = [...this.prePaginatePipeline];
     totalPipeline.push({ $count: 'total' });
     const result = await this.model.aggregate(totalPipeline);
     return { total: result[0]?.total || 0 };

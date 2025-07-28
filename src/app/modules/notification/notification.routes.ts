@@ -9,11 +9,13 @@ notificationRouters.post("/", authVerify([userRoles.admin, userRoles.companyAdmi
 notificationRouters.get("/", authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.employee]), notificationController.getAllNotifications)
 
 notificationRouters.patch(
-  "/:id", authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.employee]),
-  notificationController.markAsRead)
-
-notificationRouters.patch(
-  "/", authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.employee]),
+  "/mark-all-as-read", authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.employee]),
   notificationController.markAllAsRead)
+
+notificationRouters.get("/unread-count", authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.employee]), notificationController.getUnreadNotificationCount)
+
+notificationRouters.delete("/:id", authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.employee]), notificationController.deleteSingleNotification)
+
+notificationRouters.delete("/", authVerify([userRoles.admin, userRoles.companyAdmin, userRoles.employee]), notificationController.deleteMyNotifications)
 
 export default notificationRouters;
