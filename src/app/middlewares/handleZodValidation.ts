@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express"
-import { AnyZodObject } from "zod"
+import { AnyZodObject, ZodArray, ZodObject } from "zod"
 
-export const handleZodValidation = (schema: AnyZodObject, parsedData = false) => async (req: Request, res: Response, next: NextFunction) => {
+export const handleZodValidation = (schema: AnyZodObject | ZodArray<ZodObject<any>>, parsedData = false) => async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (parsedData && req.body.payload) {
       await schema?.parseAsync(JSON.parse(req?.body?.payload))
