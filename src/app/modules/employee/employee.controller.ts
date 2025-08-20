@@ -15,7 +15,7 @@ const createEmployee = handleAsyncRequest(async (req: any, res) => {
 
 const getAllCompanyEmployees = handleAsyncRequest(async (req: any, res) => {
   const userId = req.user.id
-  const result = await employeeService.getAllCompanyEmployees(userId);
+  const result = await employeeService.getAllCompanyEmployees(userId, req.query);
   successResponse(res, {
     message: "Employees retrieved successfully!",
     data: result

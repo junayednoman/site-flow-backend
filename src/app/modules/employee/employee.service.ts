@@ -9,6 +9,7 @@ import { userRoles } from "../../constants/global.constant";
 import fs from "fs";
 import { sendEmail } from "../../utils/sendEmail";
 import { deleteSingleFileFromS3 } from "../../utils/deleteSingleFileFromS3";
+import QueryBuilder from "../../classes/queryBuilder";
 
 const createEmployee = async (id: string, payload: TEmployee & { password: string }) => {
   payload.company_admin = id;
@@ -59,9 +60,29 @@ const createEmployee = async (id: string, payload: TEmployee & { password: strin
   }
 }
 
-const getAllCompanyEmployees = async (id: string) => {
-  const employees = await Employee.find({ company_admin: id });
-  return employees;
+const getAllCompanyEmployees = async (userId: string, query: Record<string, any>) => {
+  const companyAdmin = await Auth.findById(userId)
+  const searchableFields = [
+    "name",
+    "email",
+    "employee_id",
+    "image",
+  ];
+  query.company_admin = companyAdmin?.user
+  const employeeQuery = new QueryBuilder(
+    Employee.find(),
+    query
+  )
+    .search(searchableFields)
+    .filter()
+    .sort()
+    .paginate()
+    .selectFields();
+
+  const meta = await employeeQuery.countTotal();
+  const result = await employeeQuery.queryModel
+
+  return { data: result, meta };
 }
 
 const getSingleEmployee = async (id: string) => {
