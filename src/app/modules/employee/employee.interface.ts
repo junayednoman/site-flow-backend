@@ -8,4 +8,5 @@ export type TEmployee = {
   email: string;
   phone?: string | null;
   company_admin: ObjectId | string;
+  is_deleted?: boolean;
 };

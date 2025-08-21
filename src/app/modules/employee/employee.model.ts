@@ -31,9 +31,13 @@ const EmployeeSchema = new mongoose.Schema<TEmployee>({
   },
   company_admin: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'CompanyAdmin',
+    ref: 'Auth',
     required: true,
   },
+  is_deleted: {
+    type: Boolean,
+    default: false,
+  }
 });
 
 export const Employee = mongoose.model('Employee', EmployeeSchema);

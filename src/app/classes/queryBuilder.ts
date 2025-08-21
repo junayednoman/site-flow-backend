@@ -33,7 +33,6 @@ class QueryBuilder<T> {
       'page',
       'fields',
       'skip',
-      'daysBefore',
       'populatedFields',
     ];
     excludeFields.forEach(field => delete queryObject[field]);

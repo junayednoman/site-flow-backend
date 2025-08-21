@@ -61,14 +61,14 @@ const createEmployee = async (id: string, payload: TEmployee & { password: strin
 }
 
 const getAllCompanyEmployees = async (userId: string, query: Record<string, any>) => {
-  const companyAdmin = await Auth.findById(userId)
   const searchableFields = [
     "name",
     "email",
     "employee_id",
     "image",
   ];
-  query.company_admin = companyAdmin?.user
+  query.company_admin = userId
+  query.is_deleted = false
   const employeeQuery = new QueryBuilder(
     Employee.find(),
     query
@@ -81,7 +81,6 @@ const getAllCompanyEmployees = async (userId: string, query: Record<string, any>
 
   const meta = await employeeQuery.countTotal();
   const result = await employeeQuery.queryModel
-
   return { data: result, meta };
 }
 
@@ -113,7 +112,21 @@ const deleteEmployee = async (id: string) => {
   if (!employee) throw new AppError(400, "Invalid employee id!");
   const auth = await Auth.findOne({ email: employee.email, is_deleted: false });
   if (!auth) throw new AppError(400, "Invalid employee id!");
-  return await Auth.findOneAndUpdate(auth._id, { is_deleted: true }, { new: true });
+
+  const session = await startSession();
+
+  try {
+    session.startTransaction();
+    await Auth.findByIdAndUpdate(auth._id, { is_deleted: true }, { new: true, session });
+    const updatedEmployee = await Employee.findByIdAndUpdate(employee._id, { is_deleted: true }, { new: true, session });
+    await session.commitTransaction();
+    return updatedEmployee;
+  } catch (error: any) {
+    await session.abortTransaction();
+    throw new AppError(400, error?.message || "Failed to delete employee!");
+  } finally {
+    session.endSession()
+  }
 }
 
 const employeeService = {
