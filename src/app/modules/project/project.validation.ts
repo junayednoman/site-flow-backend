@@ -5,7 +5,7 @@ export const ProjectValidationSchema = z.object({
   client_name: z.string().min(1, "client_name is required"),
   name: z.string().min(1, "name is required"),
   location: z.string().min(1, "location is required"),
-  timeline: z.string().min(1, "timeline is required"),
+  timeline: z.string({ required_error: "Timeline is required" }),
   note: z.string().optional(),
   supervisor: z.string({ required_error: "Supervisor is required" }).refine(val => mongoose.Types.ObjectId.isValid(val), {
     message: "Invalid supervisor id",
