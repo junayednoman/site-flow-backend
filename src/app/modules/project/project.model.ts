@@ -6,7 +6,7 @@ const ProjectSchema = new mongoose.Schema<TProjectType>({
   company_admin: { type: mongoose.Schema.Types.ObjectId, ref: 'Auth', required: true },
   name: { type: String, required: true },
   location: { type: String, required: true },
-  timeline: { type: Date, required: true },
+  timeline: { type: String, required: true },
   note: { type: String, required: false },
   supervisor: { type: mongoose.Schema.Types.ObjectId, ref: 'Auth', required: true },
   manager: { type: mongoose.Schema.Types.ObjectId, ref: 'Auth', required: true },

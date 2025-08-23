@@ -5,7 +5,7 @@ export type TProjectType = {
   company_admin: ObjectId | string;
   name: string;
   location: string;
-  timeline: Date;
+  timeline: string;
   note?: string;
   supervisor: ObjectId;
   manager: ObjectId;
