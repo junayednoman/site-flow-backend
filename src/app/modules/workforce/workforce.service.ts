@@ -10,7 +10,7 @@ const createWorkforce = async (payload: TWorkforce[]) => {
 
     const existing = await Workforce.findOne({ project: workforce.project, name: workforce.name });
     if (existing) throw new AppError(400, 'Workforce already exists!');
-
+      workforce.initial_quantity = workforce.quantity;
     await Workforce.create(workforce);
   }
 
@@ -39,7 +39,7 @@ const updateWorkforce = async (id: string, payload: Partial<TWorkforce>, userId:
   ) {
     throw new AppError(401, 'Unauthorized');
   }
-
+  if (payload.quantity) payload.initial_quantity = payload.quantity
   const updated = await Workforce.findByIdAndUpdate(id, payload, { new: true });
   return updated;
 };

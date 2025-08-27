@@ -4,6 +4,7 @@ import { TWorkforce } from './workforce.interface';
 const workforceSchema = new Schema<TWorkforce>({
   project: { type: Types.ObjectId, ref: 'Project', required: true },
   name: { type: String, required: true },
+  initial_quantity: { type: Number, required: true },
   quantity: { type: Number, required: true },
   is_deleted: { type: Boolean, default: false },
 }, {

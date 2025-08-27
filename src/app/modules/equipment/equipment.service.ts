@@ -7,6 +7,7 @@ const createEquipment = async (payload: TEquipment[]) => {
   payload.forEach(async (equipment: TEquipment) => {
     const project = await Project.findById(equipment.project);
     if (!project) throw new AppError(400, 'Invalid project id!');
+    equipment.initial_quantity = equipment.quantity;
     const result = await Equipment.create(equipment);
     return result;
   })
@@ -35,6 +36,8 @@ const updateEquipment = async (id: string, payload: Partial<TEquipment>, userId:
   ) {
     throw new AppError(401, 'Unauthorized');
   }
+
+  if (payload.quantity) payload.initial_quantity = payload.quantity
 
   const updated = await Equipment.findByIdAndUpdate(id, payload, { new: true });
   return updated;
