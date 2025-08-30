@@ -167,7 +167,9 @@ const getProjectSiteDiaries = async (query: Record<string, any>, projectId: stri
         name: 1,
         duration: 1,
         totalWorkforces: 1,
-        totalEquipments: 1
+        totalEquipments: 1,
+        location: 1,
+        createdAt: 1
       }
     }
   ])

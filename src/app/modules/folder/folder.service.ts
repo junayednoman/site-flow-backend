@@ -37,10 +37,8 @@ const getFoldersByProjectId = async (userId: string, projectId: string) => {
   return folders;
 };
 
-const getSingleFolder = async (userId: string, folderId: string) => {
+const getSingleFolder = async (folderId: string) => {
   const folder = await Folder.findById(folderId);
-  const project = await Project.findById(folder?.project);
-  checkProjectAuthorization(project!, userId, [userRoles.companyAdmin, userRoles.employee]);
   return folder;
 }
 

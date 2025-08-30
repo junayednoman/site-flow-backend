@@ -168,7 +168,9 @@ const getProjectDayWorks = async (query: Record<string, any>, projectId: string,
         name: 1,
         duration: 1,
         totalWorkforces: 1,
-        totalEquipments: 1
+        totalEquipments: 1,
+        location: 1,
+        createdAt: 1
       }
     }
   ])

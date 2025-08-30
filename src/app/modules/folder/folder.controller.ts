@@ -25,8 +25,7 @@ const getFoldersByProjectId = handleAsyncRequest(async (req: any, res) => {
 
 const getSingleFolder = handleAsyncRequest(async (req: any, res) => {
   const { folderId } = req.params;
-  const userId = req.user.id;
-  const result = await folderService.getSingleFolder(userId, folderId);
+  const result = await folderService.getSingleFolder( folderId);
   successResponse(res, {
     message: "Folder retrieved successfully!",
     data: result,
