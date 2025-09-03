@@ -90,7 +90,7 @@ const getSingleEmployee = async (id: string) => {
 }
 
 const getEmployeeProfile = async (email: string) => {
-  const employee = await Employee.findOne({ email });
+  const employee = await Employee.findOne({ email }).populate("company_admin");
   return employee;
 }
 
