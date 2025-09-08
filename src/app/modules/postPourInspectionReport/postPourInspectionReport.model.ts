@@ -16,10 +16,11 @@ const PostPourInspectionReportSchema = new mongoose.Schema<TPostPourInspectionRe
   temporary_works: { type: String, required: [true, "Temporary works is required"], trim: true },
   pour_reference: { type: String, required: [true, "Pour reference is required"], trim: true },
   setting_out: {
-    line: { type: Boolean, required: true },
+    line: { type: String, required: true },
     inspection: { type: Boolean, required: true },
     comment: { type: String, trim: true },
   },
+  rebar_drgs: { type: String, trim: true },
   concrete_finish_type: { type: InspectionDetailSchema, required: true },
   chamfers_edging_etc: { type: InspectionDetailSchema, required: true },
   drainage_elements: { type: InspectionDetailSchema, required: true },
@@ -27,9 +28,8 @@ const PostPourInspectionReportSchema = new mongoose.Schema<TPostPourInspectionRe
   crack_inducers: { type: InspectionDetailSchema, required: true },
   waterproofing_membrane: { type: InspectionDetailSchema, required: true },
   others: { type: InspectionDetailSchema, required: true },
-  comment: { type: String, trim: true },
-  signed_on_completion_signature: { type: String }, // URL to the uploaded image
-  client_approved_signature: { type: String }, // URL to the uploaded image
+  signed_on_completion_signature: { type: String },
+  client_approved_signature: { type: String },
   updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Auth', required: true },
 }, {
   timestamps: true,

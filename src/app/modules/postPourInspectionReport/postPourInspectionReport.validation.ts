@@ -12,10 +12,11 @@ const postPourInspectionReportSchema = z.object({
   inspection_date: z.string({ required_error: "Inspection date is required" }),
   drawing_no: z.string().min(1, "Drawing number is required").trim(),
   ga_drawing: z.string().min(1, "GA drawing is required").trim(),
+  rebar_drgs: z.string().trim().optional(),
   temporary_works: z.string().min(1, "Temporary works is required").trim(),
   pour_reference: z.string().min(1, "Pour reference is required").trim(),
   setting_out: z.object({
-    line: z.boolean(),
+    line: z.string(),
     inspection: z.boolean(),
     comment: z.string().trim().optional(),
   }),
@@ -26,7 +27,6 @@ const postPourInspectionReportSchema = z.object({
   crack_inducers: inspectionDetailSchema,
   waterproofing_membrane: inspectionDetailSchema,
   others: inspectionDetailSchema,
-  comment: z.string().trim().optional(),
 });
 
 export const addOrReplacePostPourInspectionReportValidationSchema = postPourInspectionReportSchema.strict();

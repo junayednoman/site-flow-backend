@@ -13,10 +13,11 @@ export type TPostPourInspectionReport = {
   inspection_date: Date;
   drawing_no: string;
   ga_drawing: string;
+  rebar_drgs: string;
   temporary_works: string;
   pour_reference: string;
   setting_out: {
-    line: boolean;
+    line: string;
     inspection: boolean;
     comment?: string;
   };
@@ -27,8 +28,7 @@ export type TPostPourInspectionReport = {
   crack_inducers: TInspectionDetail;
   waterproofing_membrane: TInspectionDetail;
   others: TInspectionDetail;
-  comment?: string;
-  signed_on_completion_signature?: string; // URL to the uploaded image
-  client_approved_signature?: string; // URL to the uploaded image
+  signed_on_completion_signature?: string;
+  client_approved_signature?: string;
   updated_by?: ObjectId;
 };
