@@ -35,6 +35,12 @@ chatGroupRoutes.post(
 );
 
 chatGroupRoutes.get(
+  "/get-my-chats",
+  authVerify([userRoles.companyAdmin, userRoles.employee]),
+  chatGroupController.getMyChatList
+);
+
+chatGroupRoutes.get(
   "/:groupId",
   authVerify([userRoles.companyAdmin, userRoles.employee]),
   chatGroupController.getChatGroup
@@ -42,6 +48,12 @@ chatGroupRoutes.get(
 
 chatGroupRoutes.get(
   "/project/:projectId",
+  authVerify([userRoles.companyAdmin, userRoles.employee]),
+  chatGroupController.getProjectsChatList
+);
+
+chatGroupRoutes.get(
+  "/get-my-chats",
   authVerify([userRoles.companyAdmin, userRoles.employee]),
   chatGroupController.getProjectsChatList
 );

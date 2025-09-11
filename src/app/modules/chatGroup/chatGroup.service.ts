@@ -48,6 +48,24 @@ const getProjectsChatList = async (project_id: string, query: Record<string, any
   return { data: result, meta };
 }
 
+const getMyChatList = async (userId: string, query: Record<string, any>) => {
+  const searchableFields = ["name"];
+  query.participants = { $in: [userId] }
+  const userQuery = new QueryBuilder(
+    ChatGroup.find(),
+    query
+  )
+    .search(searchableFields)
+    .filter()
+    .sort()
+    .paginate()
+    .selectFields();
+
+  const meta = await userQuery.countTotal();
+  const result = await userQuery.queryModel.populate("last_message", "content createdAt sender seen").lean();
+  return { data: result, meta };
+}
+
 const removeParticipant = async (group_id: string, user_id: string, admin_id: string) => {
   const chatGroup = await ChatGroup.findById(group_id);
   if (!chatGroup) throw new AppError(404, "Chat group not found!");
@@ -82,4 +100,4 @@ const getChatGroup = async (group_id: string) => {
   return chatGroup;
 };
 
-export default { createChatGroup, addParticipant, removeParticipant, updateLastMessage, getChatGroup, getProjectsChatList };
+export default { createChatGroup, addParticipant, removeParticipant, updateLastMessage, getChatGroup, getProjectsChatList, getMyChatList };

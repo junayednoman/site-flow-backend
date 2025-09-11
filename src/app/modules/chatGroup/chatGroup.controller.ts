@@ -63,13 +63,22 @@ const getProjectsChatList = handleAsyncRequest(async (req: any, res) => {
   });
 });
 
+const getMyChatList = handleAsyncRequest(async (req: any, res) => {
+  const result = await chatGroupService.getMyChatList(req.user.id, req.query);
+  successResponse(res, {
+    message: "Chat groups retrieved successfully!",
+    data: result,
+  });
+});
+
 const chatGroupController = {
   createChatGroup,
   addParticipant,
   removeParticipant,
   updateLastMessage,
   getChatGroup,
-  getProjectsChatList
+  getProjectsChatList,
+  getMyChatList
 };
 
 export default chatGroupController;
