@@ -80,6 +80,10 @@ export const initializeSocket = (server: HttpServer) => {
 
         // Update last message for the group
         await chatGroupService.updateLastMessage(chatGroupId, message._id!.toString());
+
+        // retrieve updated chat list
+        const chatList = await chatGroupService.getMyChatList(userId, { page: 1, limit: 10 });
+        chatNamespace.to(chatGroupId).emit('updateChatList', { chatList });
       } catch (error) {
         socket.emit('error', { message: (error as AppError).message, status: (error as AppError).statusCode || 500 });
       }

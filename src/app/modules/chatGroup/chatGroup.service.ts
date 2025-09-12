@@ -84,7 +84,16 @@ const getMyChatList = async (userId: string, query: Record<string, any>) => {
                 { $limit: 1 }
               ],
               unseenCount: [
-                { $match: { $expr: { $not: { $in: ["$$userId", "$seen_by"] } } } },
+                {
+                  $match: {
+                    $expr: {
+                      $and: [
+                        { $ne: ["$sender", "$$userId"] },                     // exclude messages I sent
+                        { $not: [{ $in: ["$$userId", "$seen_by"] }] }       // and not seen by me
+                      ]
+                    }
+                  }
+                },
                 { $count: "count" }
               ]
             }
