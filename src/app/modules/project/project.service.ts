@@ -154,14 +154,7 @@ const getMyProjects = async (query: Record<string, any>, userRole: "employee" | 
   return { data: result, meta };
 };
 
-const getSingleProject = async (id: string, userRole: "employee" | "company_admin", userId: string) => {
-  // Role based query
-  // let roleQuery = {};
-  // if (userRole == userRoles.companyAdmin) {
-  //   roleQuery = { company_admin: userId }
-  // } else if (userRole == userRoles.employee) {
-  //   roleQuery = { employees: { $in: [userId] } }
-  // }
+const getSingleProject = async (id: string, userId: string) => {
   const folderCount = await Folder.countDocuments({ project: id });
   const project = await Project.findOne({ _id: id });
   if (!project) throw new AppError(400, "Invalid project id!");

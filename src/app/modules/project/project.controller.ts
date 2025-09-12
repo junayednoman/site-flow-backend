@@ -26,9 +26,8 @@ const getMyProjects = handleAsyncRequest(async (req: any, res) => {
 
 const getSingleProject = handleAsyncRequest(async (req: any, res) => {
   const id = req.params.id;
-  const userRole = req.user.role;
   const userId = req.user.id;
-  const result = await projectService.getSingleProject(id, userRole, userId);
+  const result = await projectService.getSingleProject(id, userId);
   successResponse(res, {
     message: "Project retrieved successfully!",
     data: result

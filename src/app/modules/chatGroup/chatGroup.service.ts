@@ -2,9 +2,10 @@ import ChatGroup from './chatGroup.model';
 import { AppError } from '../../classes/appError';
 import Message from '../message/message.model';
 import Project from '../project/project.model';
-import { ObjectId } from 'mongoose';
+import mongoose, { ObjectId } from 'mongoose';
 import QueryBuilder from '../../classes/queryBuilder';
 import Auth from '../auth/auth.model';
+import AggregationBuilder from '../../classes/AggregationBuilder';
 
 const createChatGroup = async (user_id: string, project_id: string) => {
   const project = await Project.findById(project_id);
@@ -50,21 +51,80 @@ const getProjectsChatList = async (project_id: string, query: Record<string, any
 
 const getMyChatList = async (userId: string, query: Record<string, any>) => {
   const searchableFields = ["name"];
-  query.participants = { $in: [userId] }
-  const userQuery = new QueryBuilder(
-    ChatGroup.find(),
-    query
-  )
+
+  // Ensure participants filter
+  query.participants = new mongoose.Types.ObjectId(userId);
+
+  const chatAggregation = new AggregationBuilder(ChatGroup, [], query)
     .search(searchableFields)
     .filter()
     .sort()
     .paginate()
     .selectFields();
 
-  const meta = await userQuery.countTotal();
-  const result = await userQuery.queryModel.populate("last_message", "content createdAt sender seen").lean();
+  // Count for meta
+  const meta = await chatAggregation.countTotal();
+
+  // Execute aggregation
+  let result = await chatAggregation.execute();
+
+  // Manual population equivalent with $lookup
+  result = await ChatGroup.aggregate([
+    ...chatAggregation['pipeline'],
+    {
+      $lookup: {
+        from: "messages",
+        let: { chatGroupId: "$_id", userId: new mongoose.Types.ObjectId(userId) },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$chat_group", "$$chatGroupId"] } } },
+          {
+            $facet: {
+              lastMessage: [
+                { $sort: { createdAt: -1 } },
+                { $limit: 1 }
+              ],
+              unseenCount: [
+                { $match: { $expr: { $not: { $in: ["$$userId", "$seen_by"] } } } },
+                { $count: "count" }
+              ]
+            }
+          }
+        ],
+        as: "messagesInfo"
+      }
+    },
+    {
+      $addFields: {
+        last_message: { $arrayElemAt: ["$messagesInfo.lastMessage", 0] },
+        unSeenMessageCount: {
+          $ifNull: [{ $arrayElemAt: ["$messagesInfo.unseenCount.count", 0] }, 0]
+        }
+      }
+    },
+    {
+      $lookup: {
+        from: "projects",
+        localField: "project",
+        foreignField: "_id",
+        as: "project"
+      }
+    },
+    { $unwind: { path: "$project", preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        "last_message.content": 1,
+        "last_message.file": 1,
+        "last_message.createdAt": 1,
+        "last_message.sender": 1,
+        "last_message.seen_by": 1,
+        "project.name": 1,
+        unSeenMessageCount: 1
+      }
+    }
+  ]);
+
   return { data: result, meta };
-}
+};
 
 const removeParticipant = async (group_id: string, user_id: string, admin_id: string) => {
   const chatGroup = await ChatGroup.findById(group_id);
