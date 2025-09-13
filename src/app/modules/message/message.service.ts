@@ -4,13 +4,8 @@ import { TMessage } from './message.interface';
 import ChatGroup from '../chatGroup/chatGroup.model';
 import chatGroupService from '../chatGroup/chatGroup.service';
 import QueryBuilder from '../../classes/queryBuilder';
-import { ObjectId } from 'mongoose';
 
 const createMessage = async (chatGroupId: string, senderId: string, content: string, file?: string): Promise<TMessage> => {
-  const chatGroup = await ChatGroup.findById(chatGroupId);
-  if (!chatGroup) throw new AppError(404, "Chat group not found!");
-  if (!chatGroup.participants.includes(senderId as unknown as ObjectId)) throw new AppError(403, "User is not a participant of this chat group!");
-
   const message = await Message.create({ chat_group: chatGroupId, sender: senderId, content, file });
   await chatGroupService.updateLastMessage(chatGroupId, message._id.toString());
   return message;
