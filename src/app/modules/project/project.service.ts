@@ -9,6 +9,8 @@ import AggregationBuilder from "../../classes/AggregationBuilder";
 import Folder from "../folder/folder.model";
 import ChatGroup from "../chatGroup/chatGroup.model";
 import checkProjectAuthorization from "../../utils/checkProjectAuthorization";
+import { sendEmail } from "../../utils/sendEmail";
+import fs from "fs";
 
 const createProject = async (id: string, payload: TProjectType) => {
   const supervisor = await Employee.findOne({ _id: payload.supervisor, type: "supervisor" });
@@ -34,6 +36,10 @@ const createProject = async (id: string, payload: TProjectType) => {
     if (existingGroup) throw new AppError(400, "Chat group for this project already exists!");
 
     await ChatGroup.create([{ project: project._id, participants }], { session })
+
+    if (result) {
+      sendEmailToManagers(payload, supervisor, manager);
+    }
     await session.commitTransaction();
     return result;
   } catch (error) {
@@ -42,37 +48,6 @@ const createProject = async (id: string, payload: TProjectType) => {
   } finally {
     session.endSession();
   }
-  // send email to supervisor & manager
-  // if (result) {
-  //   const emailTemplatePath = "./src/app/emailTemplates/notifyProjectAssignment.html";
-  //   const year = new Date().getFullYear().toString();
-  //   // for supervisor
-  //   const subject = `You have been assigned as supervisor for ${payload.name} - Site Flow`
-  //   fs.readFile(emailTemplatePath, "utf8", (err, data) => {
-  //     if (err) throw new AppError(500, err.message || "Something went wrong");
-  //     const emailContent = data
-  //       .replace('{{name}}', supervisor.name)
-  //       .replace('{{employee_type}}', "supervisor")
-  //       .replace('{{project_name}}', payload.name)
-  //       .replace('{{year}}', year);
-
-  //     sendEmail(supervisor.email, subject, emailContent);
-  //   })
-
-  //   // for manager
-  //   const managerSubject = `You have been assigned as manager for ${payload.name} - Site Flow`
-  //   fs.readFile(emailTemplatePath, "utf8", (err, data) => {
-  //     if (err) throw new AppError(500, err.message || "Something went wrong");
-  //     const emailContent = data
-  //       .replace('{{name}}', manager.name)
-  //       .replace('{{employee_type}}', "manager")
-  //       .replace('{{project_name}}', payload.name)
-  //       .replace('{{year}}', year);
-
-  //     sendEmail(manager.email, managerSubject, emailContent);
-  //   })
-  // }
-
 }
 
 const getMyProjects = async (query: Record<string, any>, userRole: "employee" | "company_admin", userId: string) => {
@@ -176,6 +151,37 @@ const updateProject = async (id: string, userId: string, payload: TProjectType) 
   if (project.company_admin.toString() !== userId) throw new AppError(401, "Unauthorized!");
   const result = await Project.findByIdAndUpdate(id, payload, { new: true });
   return result;
+}
+
+const sendEmailToManagers = (payload: { name: string }, supervisor: { name: string, email: string }, manager: { name: string, email: string }) => {
+  // send email to supervisor & manager
+  const emailTemplatePath = "./src/app/emailTemplates/notifyProjectAssignment.html";
+  const year = new Date().getFullYear().toString();
+  // for supervisor
+  const subject = `You have been assigned as supervisor for ${payload.name} - Site Flow`
+  fs.readFile(emailTemplatePath, "utf8", (err, data) => {
+    if (err) throw new AppError(500, err.message || "Something went wrong");
+    const emailContent = data
+      .replace('{{name}}', supervisor.name)
+      .replace('{{employee_type}}', "supervisor")
+      .replace('{{project_name}}', payload.name)
+      .replace('{{year}}', year);
+
+    sendEmail(supervisor.email, subject, emailContent);
+  })
+
+  // for manager
+  const managerSubject = `You have been assigned as manager for ${payload.name} - Site Flow`
+  fs.readFile(emailTemplatePath, "utf8", (err, data) => {
+    if (err) throw new AppError(500, err.message || "Something went wrong");
+    const emailContent = data
+      .replace('{{name}}', manager.name)
+      .replace('{{employee_type}}', "manager")
+      .replace('{{project_name}}', payload.name)
+      .replace('{{year}}', year);
+
+    sendEmail(manager.email, managerSubject, emailContent);
+  })
 }
 
 const projectService = { createProject, getMyProjects, getSingleProject, updateProject };

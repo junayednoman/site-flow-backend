@@ -37,19 +37,7 @@ const createEmployee = async (id: string, payload: TEmployee & { password: strin
     await Auth.create([authData], { session });
 
     if (newUser) {
-      // send otp
-      const emailTemplatePath = "./src/app/emailTemplates/informEmployee.html";
-      const subject = `You have been added as a ${payload.type} - Site FLow`;
-      const year = new Date().getFullYear().toString();
-      fs.readFile(emailTemplatePath, "utf8", (err, data) => {
-        if (err) throw new AppError(500, err.message || "Something went wrong");
-        const emailContent = data
-          .replace('{{name}}', payload.name)
-          .replace('{{employee_type}}', payload.type)
-          .replace('{{year}}', year);
-
-        sendEmail(payload.email, subject, emailContent);
-      })
+      sendEmailToEmployee(payload, password);
     }
     await session.commitTransaction();
   } catch (error: any) {
@@ -125,6 +113,22 @@ const deleteEmployee = async (id: string) => {
   } finally {
     session.endSession()
   }
+}
+
+const sendEmailToEmployee = (payload: TEmployee, password: string) => {
+  const emailTemplatePath = "./src/app/emailTemplates/informEmployee.html";
+  const subject = `You have been added as a ${payload.type} - Site FLow`;
+  const year = new Date().getFullYear().toString();
+  fs.readFile(emailTemplatePath, "utf8", (err, data) => {
+    if (err) throw new AppError(500, err.message || "Something went wrong");
+    const emailContent = data
+      .replace('{{name}}', payload.name)
+      .replace('{{employee_type}}', payload.type)
+      .replace('{{password}}', password)
+      .replace('{{year}}', year);
+
+    sendEmail(payload.email, subject, emailContent);
+  })
 }
 
 const employeeService = {
