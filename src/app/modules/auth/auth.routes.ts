@@ -10,11 +10,13 @@ import {
 import AuthController from "./auth.controller";
 import authVerify from "../../middlewares/authVerify";
 import { userRoles } from "../../constants/global.constant";
+import { upload } from "../../utils/awss3";
 
 const authRouters = Router();
 authRouters.post(
   "/company-admin-signup",
-  handleZodValidation(loginUserValidationSchema),
+  upload.single("logo"),
+  handleZodValidation(loginUserValidationSchema, true),
   AuthController.companyAdminSignUp
 );
 authRouters.post(

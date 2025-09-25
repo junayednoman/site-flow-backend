@@ -1,12 +1,15 @@
 import { AppError } from "../../classes/appError";
-import { deleteSingleFileFromS3 } from "../../utils/deleteSingleFileFromS3";
+import { TFile } from "../../interface/file.interface";
+import { deleteFromS3, uploadToS3 } from "../../utils/awss3";
 
-const uploadFile = async (file: any) => {
+const uploadFile = async (file: TFile) => {
   if (!file) throw new AppError(400, "File is required!");
-  return { url: file.location };
+  const url = await uploadToS3(file);
+  return { url };
 }
 
 const deleteFile = async (file_url: string) => {
-  await deleteSingleFileFromS3(file_url.split(".amazonaws.com/")[1]);
+  await deleteFromS3(file_url);
 }
+
 export const uploadFileService = { uploadFile, deleteFile };

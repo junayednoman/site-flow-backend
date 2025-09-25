@@ -4,7 +4,7 @@ import authVerify from "../../middlewares/authVerify";
 import { handleZodValidation } from "../../middlewares/handleZodValidation";
 import { addOrReplaceExcavationReportValidationSchema, removeSignatureValidationSchema } from "./excavationReport.validation";
 import excavationReportController from "./excavationReport.controller";
-import { upload } from "../../utils/multerS3Uploader";
+import { upload } from "../../utils/awss3";
 
 const excavationReportRoutes = Router();
 

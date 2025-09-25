@@ -43,8 +43,8 @@ const getEmployeeProfile = handleAsyncRequest(async (req: any, res) => {
 const updateEmployeeProfile = handleAsyncRequest(async (req: any, res) => {
   const email = req.user.email;
   const payload = JSON.parse(req.body.payload || "{}");
-  const file = req.file;
-  const result = await employeeService.updateEmployeeProfile(email, payload, file);
+
+  const result = await employeeService.updateEmployeeProfile(email, payload, req.file);
   successResponse(res, {
     message: "Employee profile updated successfully!",
     data: result

@@ -5,7 +5,7 @@ import { Types } from 'mongoose';
 import Project from '../project/project.model';
 import checkProjectAuthorization from '../../utils/checkProjectAuthorization';
 import { userRoles } from '../../constants/global.constant';
-import { deleteSingleFileFromS3 } from '../../utils/deleteSingleFileFromS3';
+import { deleteFromS3, uploadToS3 } from '../../utils/awss3';
 
 const createFolder = async (userId: string, payload: { name: string; project: string, added_by: string }) => {
   const project = await Project.findById(payload.project);
@@ -53,15 +53,15 @@ const updateFolderName = async (folderId: string, payload: { name: string }) => 
 
 const addFile = async (folderId: string, payload: TFile, file: any) => {
   if (!file) throw new AppError(400, "File is required!");
-  payload.url = file.location
+
   const folder = await Folder.findById(folderId);
   if (!folder) throw new AppError(404, "Folder not found!");
 
   if (folder.files.some(file => file.name === payload.name)) {
-    await deleteSingleFileFromS3(file.key);
     throw new AppError(400, "File already exists with the name!");
   }
 
+  payload.url = await uploadToS3(file);
   folder.files.push(payload as TFile);
   await folder.save();
   return folder;
@@ -74,7 +74,7 @@ const removeFile = async (folderId: string, payload: { url: string }) => {
   folder.files = folder.files.filter(file => file.url !== payload.url);
   await folder.save();
   // delete file from aws
-  await deleteSingleFileFromS3(payload.url.split(".amazonaws.com/")[1]);
+  await deleteFromS3(payload.url);
   return folder;
 };
 
@@ -84,7 +84,7 @@ const deleteFolder = async (folderId: string) => {
 
   await folder.deleteOne();
   folder.files.forEach(async (file) => {
-    await deleteSingleFileFromS3(file.url.split(".amazonaws.com/")[1]);
+    await deleteFromS3(file.url);
   })
   return { message: "Folder deleted successfully!" };
 };

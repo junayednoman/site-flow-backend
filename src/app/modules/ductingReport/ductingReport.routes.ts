@@ -4,7 +4,7 @@ import authVerify from "../../middlewares/authVerify";
 import { handleZodValidation } from "../../middlewares/handleZodValidation";
 import { addOrReplaceDuctingReportValidationSchema, removeSignatureValidationSchema } from "./ductingReport.validation";
 import ductingReportController from "./ductingReport.controller";
-import { upload } from "../../utils/multerS3Uploader";
+import { upload } from "../../utils/awss3";
 
 const ductingReportRoutes = Router();
 

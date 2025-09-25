@@ -30,16 +30,9 @@ const getSingleCompanyAdmin = handleAsyncRequest(async (req, res) => {
 
 const updateCompanyAdminProfile = handleAsyncRequest(async (req: any, res) => {
   const email = req.user.email;
-  let image = null;
-  let logo = null;
-  const files: any = req.files;
+  const payload = JSON.parse(req?.body?.payload || "{}");
 
-  if (files.image) image = files.image[0]?.location;
-  if (files.logo) logo = files.logo[0]?.location;
-  const payload = JSON.parse(req?.body?.payload);
-  payload.image = image;
-  payload.logo = logo;
-  const result = await companyAdminServices.updateCompanyAdminProfile(email, payload);
+  const result = await companyAdminServices.updateCompanyAdminProfile(email, payload, req.files);
   successResponse(res, {
     message: "User profile updated successfully!",
     data: result,

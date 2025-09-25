@@ -4,7 +4,7 @@ import authVerify from "../../middlewares/authVerify";
 import siteDiaryController from "./siteDiary.controller";
 import { handleZodValidation } from "../../middlewares/handleZodValidation";
 import { commentValidation, siteDiaryZodSchema, delayValidation, updateSiteDiaryZodSchema } from "./siteDiary.validation";
-import { upload } from "../../utils/multerS3Uploader";
+import { upload } from "../../utils/awss3";
 
 const router = Router();
 

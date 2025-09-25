@@ -1,4 +1,5 @@
 import config from "../../config";
+import { TFile } from "../../interface/file.interface";
 import handleAsyncRequest from "../../utils/handleAsyncRequest";
 import { successResponse } from "../../utils/successResponse";
 import { companyAdminServices } from "../companyAdmin/companyAdmin.service";
@@ -6,7 +7,7 @@ import AuthServices from "./auth.service";
 
 const companyAdminSignUp = handleAsyncRequest(async (req, res) => {
   const payload = req.body;
-  const result = await companyAdminServices.signUp(payload);
+  const result = await companyAdminServices.signUp(payload, req.file as TFile);
 
   successResponse(res, {
     message: "User account created successfully!",

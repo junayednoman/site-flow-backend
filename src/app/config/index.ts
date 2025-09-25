@@ -27,4 +27,13 @@ export default {
   aws_secret_access_key: process.env.AWS_SECRET_ACCESS_KEY,
   aws_region: process.env.AWS_REGION,
   aws_s3_bucket_name: process.env.AWS_S3_BUCKET_NAME,
+  aws: {
+    accessKeyId: process.env.S3_BUCKET_ACCESS_KEY,
+    secretAccessKey: process.env.S3_BUCKET_SECRET_ACCESS_KEY,
+    s3BaseUrl: process.env.S3_BASE_URL,
+    s3_api: process.env.S3_API,
+    region: process.env.AWS_REGION,
+    bucket: process.env.AWS_BUCKET_NAME,
+    endpoint: process.env.SPACES_API,
+  },
 };

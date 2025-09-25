@@ -1,3 +1,4 @@
+import { TFile } from "../../interface/file.interface";
 import handleAsyncRequest from "../../utils/handleAsyncRequest";
 import { successResponse } from "../../utils/successResponse";
 import postPourInspectionReportService from "./postPourInspectionReport.service";
@@ -5,7 +6,7 @@ import postPourInspectionReportService from "./postPourInspectionReport.service"
 const addOrReplacePostPourInspectionReport = handleAsyncRequest(async (req: any, res) => {
   const id = req.user.id;
   const payload = JSON.parse(req.body.payload || "{}");
-  const files = req.files as { client_approved_signature?: any; signed_on_completion_signature?: any };
+  const files = req.files as { client_approved_signature?: TFile[]; signed_on_completion_signature?: TFile[] };
   const result = await postPourInspectionReportService.addOrReplacePostPourInspectionReport(id, payload, files);
   successResponse(res, {
     message: "Post pour inspection report updated successfully!",

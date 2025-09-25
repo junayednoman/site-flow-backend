@@ -1,22 +1,23 @@
 import { startSession } from "mongoose";
 import { AppError } from "../../classes/appError";
-import { deleteSingleFileFromS3 } from "../../utils/deleteSingleFileFromS3";
 import Auth from "../auth/auth.model";
 import { TCompanyAdmin } from "./companyAdmin.interface";
 import bcrypt from "bcrypt";
 import config from "../../config";
-import fs from "fs"
+import fs from "fs";
 import generateOTP from "../../utils/generateOTP";
 import { sendEmail } from "../../utils/sendEmail";
 import CompanyAdmin from "./companyAdmin.model";
 import QueryBuilder from "../../classes/queryBuilder";
 import { userRoles } from "../../constants/global.constant";
+import { deleteFromS3, uploadToS3 } from "../../utils/awss3";
+import { TFile } from "../../interface/file.interface";
 
-const signUp = async (payload: TCompanyAdmin & { password: string }) => {
+const signUp = async (payload: TCompanyAdmin & { password: string }, file: TFile) => {
   const auth = await Auth.findOne({ email: payload.email, is_account_verified: true });
+
   if (auth) {
-    if (payload.logo) deleteSingleFileFromS3(payload?.logo?.split(".com/")[1]);
-    throw new AppError(400, "Email already exists!");
+    throw new AppError(400, "User already exists with the email!");
   }
 
   const session = await startSession();
@@ -45,6 +46,7 @@ const signUp = async (payload: TCompanyAdmin & { password: string }) => {
       otp_attempts: 0,
     } as any;
 
+    if (file) userData.logo = await uploadToS3(file);
     const newUser = await CompanyAdmin.findOneAndUpdate({ email: payload.email }, userData, { session, upsert: true, new: true });
 
     authData.user = newUser?._id;
@@ -70,6 +72,7 @@ const signUp = async (payload: TCompanyAdmin & { password: string }) => {
     await session.commitTransaction();
   } catch (err: any) {
     await session.abortTransaction();
+    if (payload.logo) await deleteFromS3(payload.logo);
     throw new AppError(500, err.message || "Something went wrong");
   } finally {
     session.endSession();
@@ -116,11 +119,14 @@ const getSingleCompanyAdmin = async (id: string) => {
   return result;
 }
 
-const updateCompanyAdminProfile = async (email: string, payload: Partial<TCompanyAdmin>) => {
+const updateCompanyAdminProfile = async (email: string, payload: Partial<TCompanyAdmin>, files: any) => {
+  if (files?.logo.length) payload.logo = await uploadToS3(files.logo[0]);
+  if (files?.image.length) payload.image = await uploadToS3(files.image[0]);
+
   const companyAdmin = await CompanyAdmin.findOne({ email });
   const result = await CompanyAdmin.findByIdAndUpdate(companyAdmin?._id, payload, { new: true });
-  if (result && payload?.logo && companyAdmin?.logo) deleteSingleFileFromS3(companyAdmin?.logo!.split(".com/")[1]);
-  if (result && payload?.image && companyAdmin?.image) deleteSingleFileFromS3(companyAdmin?.image!.split(".com/")[1]);
+  if (result && payload?.logo && companyAdmin?.logo) deleteFromS3(companyAdmin?.logo);
+  if (result && payload?.image && companyAdmin?.image) deleteFromS3(companyAdmin?.image);
   return result;
 }
 

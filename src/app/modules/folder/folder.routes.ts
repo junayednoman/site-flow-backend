@@ -9,7 +9,7 @@ import {
   removeFileValidationSchema,
 } from "./folder.validation";
 import folderController from "./folder.controller";
-import { upload } from "../../utils/multerS3Uploader";
+import { upload } from "../../utils/awss3";
 
 const folderRoutes = Router();
 

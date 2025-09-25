@@ -3,10 +3,9 @@ import { successResponse } from "../../utils/successResponse";
 import dayWorkService from "./dayWork.service";
 
 const createDayWork = handleAsyncRequest(async (req: any, res) => {
-  const file = req.file;
   const payload = JSON.parse(req.body.payload || "{}");
   const userId = req.user.id;
-  const result = await dayWorkService.createDayWork(userId, payload, file);
+  const result = await dayWorkService.createDayWork(userId, payload, req.file);
   successResponse(res, {
     message: "Day-work created successfully!",
     data: result,

@@ -5,21 +5,21 @@ import Project from "../project/project.model";
 import Workforce from "../workforce/workforce.model";
 import Equipment from "../equipment/equipment.model";
 import mongoose, { ObjectId, startSession } from "mongoose";
-import { deleteSingleFileFromS3 } from "../../utils/deleteSingleFileFromS3";
 import checkProjectAuthorization from "../../utils/checkProjectAuthorization";
 import { userRoles } from "../../constants/global.constant";
 import AggregationBuilder from "../../classes/AggregationBuilder";
+import { TFile } from "../../interface/file.interface";
+import { deleteFromS3, uploadToS3 } from "../../utils/awss3";
 
-const createSiteDiary = async (userId: string, payload: TSiteDiary, file?: any) => {
+const createSiteDiary = async (userId: string, payload: TSiteDiary, file?: TFile) => {
   payload.added_by = userId as unknown as ObjectId;
-  if (file) payload.image = file.location;
+
   const session = await startSession();
   session.startTransaction();
 
   try {
     const project = await Project.findById(payload.project).session(session);
     if (!project) {
-      await deleteSingleFileFromS3(file?.key);
       throw new AppError(400, "Invalid project ID!");
     }
 
@@ -28,7 +28,6 @@ const createSiteDiary = async (userId: string, payload: TSiteDiary, file?: any) 
       userId !== project.supervisor.toString() &&
       userId !== project.manager.toString()
     ) {
-      await deleteSingleFileFromS3(file?.key);
       throw new AppError(401, "Unauthorized!");
     }
 
@@ -52,15 +51,12 @@ const createSiteDiary = async (userId: string, payload: TSiteDiary, file?: any) 
     for (const [workforceId, totalQuantity] of Object.entries(workforceTotals)) {
       const existingWorkforce = await Workforce.findById(workforceId).session(session);
       if (!existingWorkforce) {
-        await deleteSingleFileFromS3(file?.key);
         throw new AppError(400, `Invalid workforce ID: ${workforceId}`);
       }
       if (existingWorkforce.project.toString() !== payload.project.toString()) {
-        await deleteSingleFileFromS3(file?.key);
         throw new AppError(400, `Workforce ${workforceId} is not associated with project ${payload.project}`);
       }
       if (totalQuantity > existingWorkforce.quantity) {
-        await deleteSingleFileFromS3(file?.key);
         throw new AppError(400, `Insufficient total workforce quantity available for ${workforceId}: requested ${totalQuantity}, available ${existingWorkforce.quantity}`);
       }
       existingWorkforce.quantity -= totalQuantity;
@@ -71,27 +67,25 @@ const createSiteDiary = async (userId: string, payload: TSiteDiary, file?: any) 
     for (const [equipmentId, totalQuantity] of Object.entries(equipmentTotals)) {
       const existingEquipment = await Equipment.findById(equipmentId).session(session);
       if (!existingEquipment) {
-        await deleteSingleFileFromS3(file?.key);
         throw new AppError(400, `Invalid equipment ID: ${equipmentId}`);
       }
       if (existingEquipment.project.toString() !== payload.project.toString()) {
-        await deleteSingleFileFromS3(file?.key);
         throw new AppError(400, `Equipment ${equipmentId} is not associated with project ${payload.project}`);
       }
       if (totalQuantity > existingEquipment.quantity) {
-        await deleteSingleFileFromS3(file?.key);
         throw new AppError(400, `Insufficient total equipment quantity available for ${equipmentId}: requested ${totalQuantity}, available ${existingEquipment.quantity}`);
       }
       existingEquipment.quantity -= totalQuantity;
       await existingEquipment.save({ session });
     }
 
+    if (file) payload.image = await uploadToS3(file);
     const siteDiary = await SiteDiary.create([payload], { session });
     await session.commitTransaction();
     return siteDiary;
   } catch (error: any) {
     await session.abortTransaction();
-    await deleteSingleFileFromS3(file?.key);
+    if (payload.image) await deleteFromS3(payload.image);
     throw new AppError(500, error.message || "Error creating SiteDiary!");
   } finally {
     session.endSession();
@@ -184,7 +178,7 @@ const getProjectSiteDiaries = async (query: Record<string, any>, projectId: stri
   return { data: result, meta };
 };
 
-const updateSiteDiary = async (id: string, userId: string, payload: Partial<TSiteDiary>, file?: any) => {
+const updateSiteDiary = async (id: string, userId: string, payload: Partial<TSiteDiary>, file?: TFile) => {
   const existing = await SiteDiary.findById(id).populate("project", "company_admin supervisor manager");
   if (!existing) {
     throw new AppError(400, "Invalid site-diary id!");
@@ -196,11 +190,8 @@ const updateSiteDiary = async (id: string, userId: string, payload: Partial<TSit
     userId !== project.supervisor.toString() &&
     userId !== project.manager.toString()
   ) {
-    await deleteSingleFileFromS3(file?.key);
     throw new AppError(401, "Unauthorized");
   }
-
-  if (file) payload.image = file.location;
 
   const session = await startSession();
   try {
@@ -211,11 +202,9 @@ const updateSiteDiary = async (id: string, userId: string, payload: Partial<TSit
         for (const workforceData of task.workforces) {
           const existingWorkforce = await Workforce.findById(workforceData.workforce).session(session);
           if (!existingWorkforce) {
-            await deleteSingleFileFromS3(file?.key);
             throw new AppError(400, `Invalid workforce ID: ${workforceData.workforce}`);
           }
           if (existingWorkforce.project.toString() !== existing.project.toString()) {
-            await deleteSingleFileFromS3(file?.key);
             throw new AppError(400, `Workforce ${workforceData.workforce} is not associated with project ${existing.project}`);
           }
           const previousWorkforce = existing.tasks
@@ -224,7 +213,6 @@ const updateSiteDiary = async (id: string, userId: string, payload: Partial<TSit
           if (previousWorkforce) {
             if (previousWorkforce.quantity < workforceData.quantity) {
               if (workforceData.quantity - previousWorkforce.quantity > existingWorkforce.quantity) {
-                await deleteSingleFileFromS3(file?.key);
                 throw new AppError(400, `Insufficient workforce quantity: ${workforceData.workforce}`);
               }
               existingWorkforce.quantity -= workforceData.quantity - previousWorkforce.quantity;
@@ -238,11 +226,9 @@ const updateSiteDiary = async (id: string, userId: string, payload: Partial<TSit
         for (const equipmentData of task.equipments) {
           const existingEquipment = await Equipment.findById(equipmentData.equipment).session(session);
           if (!existingEquipment) {
-            await deleteSingleFileFromS3(file?.key);
             throw new AppError(400, `Invalid equipment ID: ${equipmentData.equipment}`);
           }
           if (existingEquipment.project.toString() !== existing.project.toString()) {
-            await deleteSingleFileFromS3(file?.key);
             throw new AppError(400, `Equipment ${equipmentData.equipment} is not associated with project ${existing.project}`);
           }
           const previousEquipment = existing.tasks
@@ -251,7 +237,6 @@ const updateSiteDiary = async (id: string, userId: string, payload: Partial<TSit
           if (previousEquipment) {
             if (previousEquipment.quantity < equipmentData.quantity) {
               if (equipmentData.quantity - previousEquipment.quantity > existingEquipment.quantity) {
-                await deleteSingleFileFromS3(file?.key);
                 throw new AppError(400, `Insufficient equipment quantity: ${equipmentData.equipment}`);
               }
               existingEquipment.quantity -= equipmentData.quantity - previousEquipment.quantity;
@@ -264,13 +249,14 @@ const updateSiteDiary = async (id: string, userId: string, payload: Partial<TSit
       }
     }
 
+    if (file) payload.image = await uploadToS3(file)
     const updatedSiteDiary = await SiteDiary.findByIdAndUpdate(id, payload, { new: true });
-    if (updatedSiteDiary && existing.image) await deleteSingleFileFromS3(existing.image!.split(".com/")[1]);
+    if (updatedSiteDiary && payload.image && existing.image) await deleteFromS3(existing.image);
     await session.commitTransaction();
     return updatedSiteDiary;
   } catch (error: any) {
     await session.abortTransaction();
-    await deleteSingleFileFromS3(file?.key);
+    if (payload.image) await deleteFromS3(payload.image);
     throw new AppError(500, error.message || "Error updating SiteDiary!");
   } finally {
     session.endSession();
@@ -478,7 +464,7 @@ const deleteSiteDiary = async (id: string) => {
     }
 
     const deleted = await SiteDiary.findByIdAndDelete(id);
-    if (deleted && existing.image) await deleteSingleFileFromS3(existing.image!.split(".com/")[1]);
+    if (deleted && existing.image) await deleteFromS3(existing.image);
     await session.commitTransaction();
     return deleted;
   } catch (error: any) {

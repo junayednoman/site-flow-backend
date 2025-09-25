@@ -4,7 +4,7 @@ import authVerify from "../../middlewares/authVerify";
 import { handleZodValidation } from "../../middlewares/handleZodValidation";
 import { addOrReplacePostPourInspectionReportValidationSchema, removeSignatureValidationSchema } from "./postPourInspectionReport.validation";
 import postPourInspectionReportController from "./postPourInspectionReport.controller";
-import { upload } from "../../utils/multerS3Uploader";
+import { upload } from "../../utils/awss3";
 
 const postPourInspectionReportRoutes = Router();
 

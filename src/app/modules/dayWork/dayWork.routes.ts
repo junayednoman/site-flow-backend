@@ -4,7 +4,7 @@ import authVerify from "../../middlewares/authVerify";
 import dayWorkController from "./dayWork.controller";
 import { handleZodValidation } from "../../middlewares/handleZodValidation";
 import { commentValidation, dayWorkZodSchema, delayValidation, updateDayWorkZodSchema } from "./dayWork.validation";
-import { upload } from "../../utils/multerS3Uploader";
+import { upload } from "../../utils/awss3";
 
 const router = Router();
 

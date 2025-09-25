@@ -5,26 +5,25 @@ import { TPostPourInspectionReport } from './postPourInspectionReport.interface'
 import Project from '../project/project.model';
 import checkProjectAuthorization from '../../utils/checkProjectAuthorization';
 import { userRoles } from '../../constants/global.constant';
-import { deleteSingleFileFromS3 } from '../../utils/deleteSingleFileFromS3';
+import { TFile } from '../../interface/file.interface';
+import { deleteFromS3, uploadToS3 } from '../../utils/awss3';
 
-const addOrReplacePostPourInspectionReport = async (userId: ObjectId, payload: TPostPourInspectionReport, files?: { client_approved_signature?: any; signed_on_completion_signature?: any }) => {
+const addOrReplacePostPourInspectionReport = async (userId: ObjectId, payload: TPostPourInspectionReport, files?: { client_approved_signature?: TFile[]; signed_on_completion_signature?: TFile[] }) => {
   const session = await startSession();
   session.startTransaction();
 
   try {
     const project = await Project.findById(payload.project).session(session);
     if (!project) {
-      await deleteSingleFileFromS3(files?.client_approved_signature[0]?.key);
-      await deleteSingleFileFromS3(files?.signed_on_completion_signature[0]?.key);
       throw new AppError(400, "Invalid project ID!");
     }
 
     // Handle file uploads
-    if (files?.client_approved_signature) {
-      payload.client_approved_signature = files.client_approved_signature[0].location;
+    if (files?.client_approved_signature?.length) {
+      payload.client_approved_signature = await uploadToS3(files.client_approved_signature[0]);
     }
-    if (files?.signed_on_completion_signature) {
-      payload.signed_on_completion_signature = files.signed_on_completion_signature[0].location;
+    if (files?.signed_on_completion_signature?.length) {
+      payload.signed_on_completion_signature = await uploadToS3(files.signed_on_completion_signature[0]);
     }
 
     // Check if a report already exists for this project
@@ -45,8 +44,8 @@ const addOrReplacePostPourInspectionReport = async (userId: ObjectId, payload: T
     }
   } catch (error: any) {
     await session.abortTransaction();
-    await deleteSingleFileFromS3(files?.client_approved_signature[0]?.key);
-    await deleteSingleFileFromS3(files?.signed_on_completion_signature[0]?.key);
+    if (payload.signed_on_completion_signature) await deleteFromS3(payload.signed_on_completion_signature);
+    if (payload.client_approved_signature) await deleteFromS3(payload.client_approved_signature);
     throw new AppError(500, error.message || "Error processing post pour inspection report!");
   } finally {
     session.endSession();
@@ -76,11 +75,11 @@ const removeSignatureFromPostPourInspectionReport = async (projectId: string, us
   if (!report) throw new AppError(404, "No post pour inspection report found for this project!");
 
   if (payload.signatureType === "client_approved_signature" && report.client_approved_signature) {
-    await deleteSingleFileFromS3(report.client_approved_signature!.split('.amazonaws.com/')[1]);
+    await deleteFromS3(report.client_approved_signature);
     report.client_approved_signature = undefined;
     report.updated_by = userId;
   } else if (payload.signatureType === "signed_on_completion_signature" && report.signed_on_completion_signature) {
-    await deleteSingleFileFromS3(report.signed_on_completion_signature!.split('.amazonaws.com/')[1]);
+    await deleteFromS3(report.signed_on_completion_signature);
     report.signed_on_completion_signature = undefined;
     report.updated_by = userId;
   } else {

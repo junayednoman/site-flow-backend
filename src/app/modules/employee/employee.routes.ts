@@ -4,7 +4,7 @@ import { userRoles } from "../../constants/global.constant";
 import { handleZodValidation } from "../../middlewares/handleZodValidation";
 import { employeeValidationSchema, updateEmployeeValidationSchema } from "./employee.validation";
 import employeeController from "./employee.controller";
-import { upload } from "../../utils/multerS3Uploader";
+import { upload } from "../../utils/awss3";
 
 const employeeRouters = Router();
 

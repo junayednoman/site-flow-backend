@@ -1,10 +1,10 @@
 import { Router } from "express";
 import authVerify from "../../middlewares/authVerify";
 import companyAdminController from "./companyAdmin.controller";
-import { upload } from "../../utils/multerS3Uploader";
 import { userRoles } from "../../constants/global.constant";
 import { handleZodValidation } from "../../middlewares/handleZodValidation";
 import { companyUpdateSchema } from "./companyAdmin.validation";
+import { upload } from "../../utils/awss3";
 
 const companyAdminRouters = Router();
 

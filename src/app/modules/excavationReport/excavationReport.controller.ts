@@ -1,3 +1,4 @@
+import { TFile } from "../../interface/file.interface";
 import handleAsyncRequest from "../../utils/handleAsyncRequest";
 import { successResponse } from "../../utils/successResponse";
 import excavationReportService from "./excavationReport.service";
@@ -5,7 +6,7 @@ import excavationReportService from "./excavationReport.service";
 const addOrReplaceExcavationReport = handleAsyncRequest(async (req: any, res) => {
   const id = req.user.id;
   const payload = JSON.parse(req.body.payload || "{}");
-  const files = req.files as { client_approved_signature?: any; signed_on_completion_signature?: any };
+  const files = req.files as { client_approved_signature?: TFile[]; signed_on_completion_signature?: TFile[] };
   const result = await excavationReportService.addOrReplaceExcavationReport(id, payload, files);
   successResponse(res, {
     message: "Excavation report updated successfully!",
