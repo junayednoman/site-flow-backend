@@ -120,8 +120,8 @@ const getSingleCompanyAdmin = async (id: string) => {
 }
 
 const updateCompanyAdminProfile = async (email: string, payload: Partial<TCompanyAdmin>, files: any) => {
-  if (files?.logo.length) payload.logo = await uploadToS3(files.logo[0]);
-  if (files?.image.length) payload.image = await uploadToS3(files.image[0]);
+  if (files?.logo?.length) payload.logo = await uploadToS3(files.logo[0]);
+  if (files?.image?.length) payload.image = await uploadToS3(files.image[0]);
 
   const companyAdmin = await CompanyAdmin.findOne({ email });
   const result = await CompanyAdmin.findByIdAndUpdate(companyAdmin?._id, payload, { new: true });
